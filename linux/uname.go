@@ -45,6 +45,7 @@ const (
 	UnameHostname
 )
 
+// GetUname uses system calls to retrieve the same values as the uname linux command
 func GetUname(unameFlags string) (un string, err error) {
 	ub := &syscall.Utsname{}
 	err = syscall.Uname(ub)
@@ -62,6 +63,8 @@ func GetUname(unameFlags string) (un string, err error) {
 			targets = append(targets, &ub.Domainname)
 		case UnameHostname:
 			targets = append(targets, &ub.Nodename)
+		case UnameRelease:
+			targets = append(targets, &ub.Release)
 		case UnameArch:
 			targets = append(targets, &ub.Machine)
 		case UnameOS:
