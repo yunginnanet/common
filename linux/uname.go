@@ -39,10 +39,10 @@ const (
 	UnameRelease
 	// UnameDomain is "domainname", the kernel domain name.
 	UnameDomain
-	// UnameVersion is "version", or "uname -v".
-	UnameVersion
 	// UnameHostname is "Nodename" or "uname -n"
 	UnameHostname
+	// UnameVersion is "version", or "uname -v".
+	UnameVersion
 )
 
 // GetUname uses system calls to retrieve the same values as the uname linux command

@@ -1,6 +1,6 @@
 # squish
---
-    import "git.tcp.direct/kayos/common/squish"
+
+    `import "git.tcp.direct/kayos/common/squish"`
 
 ## Usage
 

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"golang.org/x/crypto/blake2b"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz1234567890"
@@ -20,20 +19,6 @@ func Fprint(w io.Writer, s string) {
 	if err != nil {
 		log.Error().Str("data", s).Err(err).Msg("Fprint failed!")
 	}
-}
-
-// BytesToBlake2b ignores all errors and gives you a blakae2b 64 hash value as a byte slice. (or panics somehow)
-func BytesToBlake2b(b []byte) []byte {
-	Hasha, _ := blake2b.New(64, nil)
-	Hasha.Write(b)
-	return Hasha.Sum(nil)
-}
-
-// CompareChecksums will take in two byte slices, hash them with blake2b, and tell you if the resulting checksums match.
-func CompareChecksums(a []byte, b []byte) bool {
-	ahash := BytesToBlake2b(a)
-	bhash := BytesToBlake2b(b)
-	return string(ahash) == string(bhash)
 }
 
 // RNG is a Random Number Generator
@@ -68,4 +53,8 @@ func Abs(n int) int {
 	y := n64 >> 63
 	n64 = (n64 ^ y) - y
 	return int(n64)
+}
+
+func OneInA(million int) bool {
+	return RNG(million) == 1
 }
