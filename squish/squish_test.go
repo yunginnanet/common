@@ -18,17 +18,18 @@ Mauris ut mi quis est vehicula molestie. Mauris eu varius urna. Integer sodales 
 `
 
 func TestGzip(t *testing.T) {
-	gsUp, err := Gzip([]byte(lip))
-	if err != nil {
-		t.Fatalf("Gzip compression failed: %e", err)
-	}
+	gsUp := Gzip([]byte(lip))
 
 	if bytes.Equal(gsUp, []byte(lip)) {
 		t.Fatalf("Gzip didn't change the data at all despite being error free...")
 	}
 
-	if len(gsUp) == len([]byte(lip)) {
-		t.Fatalf("Gzip didn't change the sise of the data at all despite being error free...")
+	if len(gsUp) == len([]byte(lip)) || len(gsUp) > len([]byte(lip)) {
+		t.Fatalf("Gzip didn't change the sise of the data at all (or it grew)...")
+	}
+
+	if len(gsUp) == 0 {
+		t.Fatalf("[FAIL] ended up with 0 bytes after compression...")
 	}
 
 	profit := len([]byte(lip)) - len(gsUp)
@@ -49,4 +50,20 @@ func TestGzip(t *testing.T) {
 	}
 
 	t.Logf("[PASS] Gzip decompress succeeded, restored %d bytes.", profit)
+
+	_, err = Gunzip(nil)
+
+}
+
+func TestUnpackStr(t *testing.T) {
+	packed := B64e(Gzip([]byte(lip)))
+	unpacked, err := UnpackStr(packed)
+	switch {
+	case err != nil:
+		t.Fatalf("[FAIL] %e", err)
+	case unpacked != lip:
+		t.Fatalf("unpackstr decided to not work, who knows why. If you see this than I have already become a janitor.")
+	default:
+		t.Logf("[PASS] TestUnpackStr")
+	}
 }

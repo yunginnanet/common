@@ -1,6 +1,9 @@
 package common
 
 import (
+	"fmt"
+	"io"
+	"os"
 	"testing"
 
 	"git.tcp.direct/kayos/common/entropy"
@@ -39,7 +42,17 @@ func TestBlakeEqualAndB64(t *testing.T) {
 		)
 	}
 
-	t.Logf("\n[PASS] based[0] = %s\n[PASS] based[1] = %s", string(based[0]), string(based[1]))
+	// sneakin in some code coverage rq dwai nbd
+	bogusRd, bogusWrt := io.Pipe()
+	t.Logf("\n")
+	go func() {
+		Fprint(io.MultiWriter(bogusWrt, os.Stdout), fmt.Sprintf("[PASS] based[0] = %s\n[PASS] based[1] = %s", string(based[0]), string(based[1])))
+	}()
+	_ = bogusWrt.CloseWithError(io.ErrClosedPipe)
+	_, err := bogusRd.Read([]byte{})
+	if err == nil {
+		t.Fatalf("should have been an error...")
+	}
 }
 
 func TestAbs(t *testing.T) {

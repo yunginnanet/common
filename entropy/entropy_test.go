@@ -6,6 +6,15 @@ import (
 )
 
 func Test_RNG(t *testing.T) {
+	RandSleepMS(5)
+	if OneInA(1000000) {
+		println(string([]byte{
+			0x66, 0x75, 0x63, 0x6B, 0x68,
+			0x6F, 0x6C, 0x65, 0x20, 0x6A,
+			0x6F, 0x6E, 0x65, 0x73, 0x2E,
+		}))
+	}
+
 	for n := 0; n != 500; n++ {
 		zero := RNG(55555)
 		one := RNG(55555)
