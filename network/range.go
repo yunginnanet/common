@@ -1,8 +1,8 @@
-package common
+package network
 
 import ipa "inet.af/netaddr"
 
-func RangeIterate(ips interface{}) chan *ipa.IP {
+func IterateNetRange(ips interface{}) chan *ipa.IP {
 	var addrs ipa.IPRange
 
 	switch ips.(type) {

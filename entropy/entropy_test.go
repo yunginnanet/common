@@ -1,4 +1,4 @@
-package common
+package entropy
 
 import (
 	"strings"
@@ -11,7 +11,7 @@ func Test_RNG(t *testing.T) {
 		one := RNG(55555)
 		t.Logf("Random0: %d Random1: %d", zero, one)
 		if zero == one {
-			t.Errorf("RNG hit a duplicate! %s == %s", zero, one)
+			t.Errorf("RNG hit a duplicate! %d == %d", zero, one)
 		}
 		zero = 0
 		one = 0
