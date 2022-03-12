@@ -7,8 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const charset = "abcdefghijklmnopqrstuvwxyz1234567890"
-
 // Fprint is fmt.Fprint with error handling.
 func Fprint(w io.Writer, s string) {
 	_, err := fmt.Fprint(w, s)
