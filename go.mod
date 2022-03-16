@@ -6,6 +6,7 @@ require (
 	github.com/rs/zerolog v1.26.1
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
+	nullprogram.com/x/rng v1.1.0
 )
 
 require (
