@@ -69,7 +69,8 @@ func Test_RandStr_Entropy(t *testing.T) {
 			// t.Logf("[-] zeroSplit[%d] is the same as oneSplit[%d] (%s)", i, i, char)
 		}
 		if similarity*4 > 55 {
-			t.Errorf("[ENTROPY FAILURE] more than a quarter of the string is the same!\n zero: %s \n one: %s \nTotal similar: %d", zero, one, similarity)
+			t.Errorf("[ENTROPY FAILURE] more than a quarter of the string is the same!\n zero: %s \n one: %s \nTotal similar: %d",
+				zero, one, similarity)
 		}
 		// t.Logf("[ENTROPY] Similarity score (lower is better): %d", similarity)
 		totalScore = totalScore + similarity
