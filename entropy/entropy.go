@@ -4,6 +4,7 @@ import (
 	crip "crypto/rand"
 	"encoding/binary"
 	"math/rand"
+	"nullprogram.com/x/rng"
 	"time"
 )
 
@@ -18,8 +19,10 @@ func RandomStrChoice(choice []string) string {
 
 func RNG(n int) int {
 	var seed int64
+	r := new(rng.SplitMix64)
 	binary.Read(crip.Reader, binary.BigEndian, &seed)
-	rng := rand.New(rand.NewSource(seed))
+	r.Seed(seed)
+	rng := rand.New(r)
 	return rng.Intn(n)
 }
 

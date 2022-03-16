@@ -18,7 +18,7 @@ func Test_RNG(t *testing.T) {
 	for n := 0; n != 500; n++ {
 		zero := RNG(55555)
 		one := RNG(55555)
-		t.Logf("Random0: %d Random1: %d", zero, one)
+		// t.Logf("Random0: %d Random1: %d", zero, one)
 		if zero == one {
 			t.Errorf("RNG hit a duplicate! %d == %d", zero, one)
 		}
@@ -44,7 +44,7 @@ func Test_RandStr(t *testing.T) {
 	for n := 0; n != 500; n++ {
 		zero := RandStr(55)
 		one := RandStr(55)
-		t.Logf("Random0: %s Random1: %s", zero, one)
+		// t.Logf("Random0: %s Random1: %s", zero, one)
 		randStrChecks(zero, one, t)
 		zero = ""
 		one = ""
@@ -53,6 +53,7 @@ func Test_RandStr(t *testing.T) {
 }
 
 func Test_RandStr_Entropy(t *testing.T) {
+	var totalScore = 0
 	for n := 0; n != 500; n++ {
 		zero := RandStr(55)
 		one := RandStr(55)
@@ -65,14 +66,16 @@ func Test_RandStr_Entropy(t *testing.T) {
 				continue
 			}
 			similarity++
-			t.Logf("[-] zeroSplit[%d] is the same as oneSplit[%d] (%s)", i, i, char)
+			// t.Logf("[-] zeroSplit[%d] is the same as oneSplit[%d] (%s)", i, i, char)
 		}
 		if similarity*4 > 55 {
 			t.Errorf("[ENTROPY FAILURE] more than a quarter of the string is the same!\n zero: %s \n one: %s \nTotal similar: %d", zero, one, similarity)
 		}
-		t.Logf("[ENTROPY] Similarity score (lower is better): %d", similarity)
+		// t.Logf("[ENTROPY] Similarity score (lower is better): %d", similarity)
+		totalScore = totalScore + similarity
 		zero = ""
 		one = ""
 	}
+	t.Logf("[ENTROPY] final score (lower is better): %d", totalScore)
 
 }
