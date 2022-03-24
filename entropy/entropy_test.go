@@ -44,7 +44,7 @@ func Test_RandStr(t *testing.T) {
 	for n := 0; n != 500; n++ {
 		zero := RandStr(55)
 		one := RandStr(55)
-		// t.Logf("Random0: %s Random1: %s", zero, one)
+		t.Logf("Random0: %s Random1: %s", zero, one)
 		randStrChecks(zero, one, t)
 		zero = ""
 		one = ""
@@ -72,7 +72,7 @@ func Test_RandStr_Entropy(t *testing.T) {
 			t.Errorf("[ENTROPY FAILURE] more than a quarter of the string is the same!\n zero: %s \n one: %s \nTotal similar: %d",
 				zero, one, similarity)
 		}
-		// t.Logf("[ENTROPY] Similarity score (lower is better): %d", similarity)
+		t.Logf("[ENTROPY] Similarity score (lower is better): %d", similarity)
 		totalScore = totalScore + similarity
 		zero = ""
 		one = ""

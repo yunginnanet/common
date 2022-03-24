@@ -17,12 +17,20 @@ func RandomStrChoice(choice []string) string {
 	return choice[n]
 }
 
-func RNG(n int) int {
+func GetCryptoSeed() int64 {
 	var seed int64
-	r := new(rng.SplitMix64)
 	binary.Read(crip.Reader, binary.BigEndian, &seed)
-	r.Seed(seed)
-	rng := rand.New(r)
+	return seed
+}
+
+func GetOptimizedRand() *rand.Rand {
+	r := new(rng.SplitMix64)
+	r.Seed(GetCryptoSeed())
+	return rand.New(r)
+}
+
+func RNG(n int) int {
+	rng := GetOptimizedRand()
 	return rng.Intn(n)
 }
 
