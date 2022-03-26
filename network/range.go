@@ -6,7 +6,7 @@ import ipa "inet.af/netaddr"
 // returning a channel that will stream all the individual netaddr IPs within the given range or prefix.
 // Alternatively, feed it a string in prefix or range format. (192.168.69.0/24) (192.168.69.0-192.168.69.254)
 // Will return nil value if input is invalid.
-func IterateNetRange(ips interface{}) chan *ipa.IP {
+func IterateNetRange(ips interface{}) chan ipa.IP {
 	var addrs ipa.IPRange
 
 	switch ips.(type) {
@@ -29,18 +29,15 @@ func IterateNetRange(ips interface{}) chan *ipa.IP {
 		return nil
 	}
 
-	ch := make(chan *ipa.IP)
-	go func(ret chan *ipa.IP) {
-		var head ipa.IP
-		head = addrs.From()
-		end := addrs.To()
-		for head != end {
+	ch := make(chan ipa.IP)
+	go func(ret chan ipa.IP) {
+		for head := addrs.From(); head != addrs.To(); head = head.Next() {
 			if !head.IsUnspecified() {
-				ret <- &head
+				ret <- head
+			} else {
+				close(ret)
 			}
-			head = head.Next()
 		}
-		close(ret)
 	}(ch)
 	return ch
 }

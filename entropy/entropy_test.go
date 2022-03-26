@@ -5,6 +5,12 @@ import (
 	"testing"
 )
 
+func check[T comparable](zero T, one T, t *testing.T) {
+	if zero == one {
+		t.Errorf("hit a duplicate! %v == %v", zero, one)
+	}
+}
+
 func Test_RNG(t *testing.T) {
 	RandSleepMS(5)
 	if OneInA(1000000) {
@@ -16,16 +22,9 @@ func Test_RNG(t *testing.T) {
 	}
 
 	for n := 0; n != 500; n++ {
-		zero := RNG(55555)
-		one := RNG(55555)
-		// t.Logf("Random0: %d Random1: %d", zero, one)
-		if zero == one {
-			t.Errorf("RNG hit a duplicate! %d == %d", zero, one)
-		}
-		zero = 0
-		one = 0
+		check(RNG(55555), RNG(55555), t)
+		check(RNGUint32(), RNGUint32(), t)
 	}
-
 }
 
 func randStrChecks(zero, one string, t *testing.T) {
@@ -35,9 +34,7 @@ func randStrChecks(zero, one string, t *testing.T) {
 	if len(zero) != 55 || len(one) != 55 {
 		t.Fatalf("RandStr output length inconsistency, len(zero) is %d and len(one) is %d, but both should have been 55", len(zero), len(one))
 	}
-	if zero == one {
-		t.Fatalf("RandStr hit a duplicate, %s == %s", zero, one)
-	}
+	check(zero, one, t)
 }
 
 func Test_RandStr(t *testing.T) {
