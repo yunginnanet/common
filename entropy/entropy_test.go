@@ -75,5 +75,12 @@ func Test_RandStr_Entropy(t *testing.T) {
 		one = ""
 	}
 	t.Logf("[ENTROPY] final score (lower is better): %d", totalScore)
+}
 
+func Test_RandomStrChoice(t *testing.T) {
+	var slice []string
+	for n := 0; n != 500; n++ {
+		slice = append(slice, RandStr(555))
+	}
+	check(RandomStrChoice(slice), RandomStrChoice(slice), t)
 }

@@ -59,13 +59,23 @@ func TestIterateNetRange(t *testing.T) {
 			want: test29,
 		},
 		{
-			name: "string",
+			name: "stringprefix",
 			args: args{ips: test29str},
+			want: test29,
+		},
+		{
+			name: "stringrange",
+			args: args{ips: test29rangestr},
 			want: test29,
 		},
 		{
 			name: "bogus",
 			args: args{ips: "whatever, man. I'm just trynt'a vibe."},
+			want: nil,
+		},
+		{
+			name: "evenboguser",
+			args: args{ips: int(5)},
 			want: nil,
 		},
 	}

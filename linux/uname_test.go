@@ -15,7 +15,7 @@ func TestGetUname(t *testing.T) {
 }
 
 func TestGetUnameFailure(t *testing.T) {
-	uname, err := GetUname("frickhole johnson")
+	uname, err := GetUname("1!cch013 j0h/\\/50/\\/")
 	if err == nil {
 		t.Fatalf("[FAIL] We failed to fail. Wanted an error. %e", err)
 	}

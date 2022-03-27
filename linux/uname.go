@@ -3,6 +3,7 @@
 package linux
 
 import (
+	"errors"
 	"strings"
 	"syscall"
 )
@@ -73,6 +74,11 @@ func GetUname(unameFlags string) (un string, err error) {
 			targets = append(targets, &ub.Version)
 		}
 	}
+
+	if len(targets) < 2 {
+		return "", errors.New("no valid uname targets in string")
+	}
+
 	var uns []string
 	for _, target := range targets {
 		var sub []string

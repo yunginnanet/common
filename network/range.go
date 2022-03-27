@@ -34,8 +34,6 @@ func IterateNetRange(ips interface{}) chan ipa.IP {
 		for head := addrs.From(); head != addrs.To(); head = head.Next() {
 			if !head.IsUnspecified() {
 				ret <- head
-			} else {
-				close(ret)
 			}
 		}
 	}(ch)

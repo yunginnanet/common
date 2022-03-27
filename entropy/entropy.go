@@ -9,37 +9,43 @@ import (
 	"nullprogram.com/x/rng"
 )
 
+// RandomStrChoice returns a random item from an input slice of strings.
 func RandomStrChoice(choice []string) string {
-	strlen := len(choice)
-	n := uint32(0)
-	if strlen > 0 {
-		n = uint32(RNG(16)) % uint32(strlen)
+	if len(choice) > 0 {
+		return choice[RNGUint32()%uint32(len(choice))]
 	}
-	return choice[n]
+	return choice[0]
 }
 
+// GetCryptoSeed returns a random int64 derived from crypto/rand.
+// This can be used as a seed for the math/rand package.
 func GetCryptoSeed() int64 {
 	var seed int64
 	_ = binary.Read(crip.Reader, binary.BigEndian, &seed)
 	return seed
 }
 
+// GetOptimizedRand returns a pointer to a new rand.Rand which uses crypto/rand to seed a splitmix64 rng.
 func GetOptimizedRand() *rand.Rand {
 	r := new(rng.SplitMix64)
 	r.Seed(GetCryptoSeed())
 	return rand.New(r)
 }
 
+// RNGUint32 returns a random uint32 using crypto/rand and splitmix64.
 func RNGUint32() uint32 {
-	rng := GetOptimizedRand()
-	return rng.Uint32()
+	r := GetOptimizedRand()
+	return r.Uint32()
 }
 
+// RNG returns integer with a maximum amount of 'n' using crypto/rand and splitmix64.
 func RNG(n int) int {
-	rng := GetOptimizedRand()
-	return rng.Intn(n)
+	r := GetOptimizedRand()
+	return r.Intn(n)
 }
 
+// OneInA generates a random number with a maximum of 'million' (input int).
+// If the resulting random number is equal to 1, then the result is true.
 func OneInA(million int) bool {
 	return RNG(million) == 1
 }
