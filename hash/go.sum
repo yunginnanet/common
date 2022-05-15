@@ -1,8 +1,0 @@
-git.tcp.direct/kayos/common/entropy v0.0.0-20220210125455-40e3d2190a52 h1:W0cnyiO2VA/QvtxlAjnL2SKUgY7K5waOSFIJgKVKNXA=
-git.tcp.direct/kayos/common/entropy v0.0.0-20220210125455-40e3d2190a52/go.mod h1:TM+NcOy0W2vfTkNIXMhcnJKdDW6YmvRRXNcvh2jCgEA=
-git.tcp.direct/kayos/common/squish v0.0.0-20220210125455-40e3d2190a52 h1:lpyyjVo/je2oSNp+ecb13oHtDDWELmsxm8WA5XZjFGw=
-git.tcp.direct/kayos/common/squish v0.0.0-20220210125455-40e3d2190a52/go.mod h1:QZ5ZpL7EsqjteMmv5C5zNMlttUpYes2RrA1ILI/Ql2w=
-golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9 h1:NUzdAbFtCJSXU20AOXgeqaUwg8Ypg4MPYmL+d+rsB5c=
-golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
-golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 h1:SrN+KX8Art/Sf4HNj6Zcz06G7VEz+7w9tdXTPOZ7+l4=
-golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
