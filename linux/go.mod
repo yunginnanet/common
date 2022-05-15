@@ -1,3 +1,3 @@
 module git.tcp.direct/kayos/common/linux
 
-go 1.17
+go 1.18
