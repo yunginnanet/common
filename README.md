@@ -12,11 +12,13 @@ Welcome to things. Here are some of the aforementioned:
 
 * [entropy](https://pkg.go.dev/git.tcp.direct/kayos/common/entropy)
 
+* [network](https://pkg.go.dev/git.tcp.direct/kayos/common/network)
+
 ## base
 
-    `import "git.tcp.direct/kayos/common"`
+`import "git.tcp.direct/kayos/common"`
 
-## Base
+## Base Module
 
 #### func  Abs
 
@@ -24,6 +26,20 @@ Welcome to things. Here are some of the aforementioned:
 func Abs(n int) int
 ```
 Abs will give you the positive version of a negative integer, quickly.
+
+#### func  BytesToFloat64
+
+```go
+func BytesToFloat64(bytes []byte) float64
+```
+BytesToFloat64 will take a slice of bytes and convert it to a float64 type.
+
+#### func  Float64ToBytes
+
+```go
+func Float64ToBytes(f float64) []byte
+```
+Float64ToBytes will take a float64 type and convert it to a slice of bytes.
 
 #### func  Fprint
 
