@@ -1,8 +1,10 @@
 package common
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/rs/zerolog/log"
 )
@@ -22,4 +24,18 @@ func Abs(n int) int {
 	y := n64 >> 63
 	n64 = (n64 ^ y) - y
 	return int(n64)
+}
+
+// Float64ToBytes will take a float64 type and convert it to a slice of bytes.
+func Float64ToBytes(f float64) []byte {
+	var buf [8]byte
+	binary.LittleEndian.PutUint64(buf[:], math.Float64bits(f))
+	return buf[:]
+}
+
+// BytesToFloat64 will take a slice of bytes and convert it to a float64 type.
+func BytesToFloat64(bytes []byte) float64 {
+	bits := binary.LittleEndian.Uint64(bytes)
+	float := math.Float64frombits(bits)
+	return float
 }
