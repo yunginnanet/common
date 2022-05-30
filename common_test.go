@@ -15,17 +15,16 @@ var needle = []byte(entropy.RandStr(16))
 
 func TestBlakeEqualAndB64(t *testing.T) {
 	var clone = make([]byte, len(needle))
-	for i, c := range needle {
-		clone[i] = c
-	}
+	copy(clone, needle)
+
 	if !hash.BlakeEqual(needle, clone) {
 		t.Fatalf("BlakeEqual failed! Values %v and %v should have been equal.\n|---->Lengths: %d and %d",
 			needle, clone, len(needle), len(clone),
 		)
 	}
-	clone = make([]byte, len(needle))
-	clone = []byte(entropy.RandStr(16))
-	if hash.BlakeEqual(needle, clone) {
+
+	falseclone := []byte(entropy.RandStr(16))
+	if hash.BlakeEqual(needle, falseclone) {
 		t.Fatalf("BlakeEqual failed! Values %v and %v should NOT have been equal.\n|---->Lengths: %d and %d",
 			needle, clone, len(needle), len(clone),
 		)
@@ -72,4 +71,17 @@ func TestAbs(t *testing.T) {
 	if Abs(int(negged)) != int(start) {
 		t.Fatalf("Abs failed! values %d and %d should have been equal.", start, negged)
 	}
+}
+
+func TestCruisinInMy64(t *testing.T) {
+	data := 420.69
+	databytes := Float64ToBytes(data)
+	if len(databytes) < 1 {
+		t.Fatalf("Float64ToBytes has returned a zero length value")
+	}
+	result := BytesToFloat64(databytes)
+	if result != data {
+		t.Fatalf("BytesToFloat64 failed! wanted %v and got %v", data, result)
+	}
+	t.Logf("original float64: %v -> Float64ToBytes %v -> BytesToFloat64 %v", data, databytes, result)
 }
