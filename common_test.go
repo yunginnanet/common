@@ -1,9 +1,11 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"testing"
 
 	"git.tcp.direct/kayos/common/entropy"
@@ -84,4 +86,34 @@ func TestCruisinInMy64(t *testing.T) {
 		t.Fatalf("BytesToFloat64 failed! wanted %v and got %v", data, result)
 	}
 	t.Logf("original float64: %v -> Float64ToBytes %v -> BytesToFloat64 %v", data, databytes, result)
+}
+
+type phonyWriter struct{}
+
+var o = &sync.Once{}
+var fprintStatus bool
+var pw = new(phonyWriter)
+
+func (p2 phonyWriter) Write(p []byte) (int, error) {
+	var err = errors.New("closed")
+	fprintStatus = false
+	o.Do(func() {
+		err = nil
+		fprintStatus = true
+	})
+	if err == nil {
+		return len(p), err
+	}
+	return 0, err
+}
+
+func TestFprint(t *testing.T) {
+	Fprint(pw, "asdf")
+	if fprintStatus != true {
+		t.Fatal("first Fprint test should have succeeded")
+	}
+	Fprint(pw, "asdf")
+	if fprintStatus != false {
+		t.Fatal("second Fprint test should not have succeeded")
+	}
 }
