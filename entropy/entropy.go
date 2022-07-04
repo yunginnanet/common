@@ -14,7 +14,7 @@ func RandomStrChoice(choice []string) string {
 	if len(choice) > 0 {
 		return choice[RNGUint32()%uint32(len(choice))]
 	}
-	return choice[0]
+	return ""
 }
 
 // GetCryptoSeed returns a random int64 derived from crypto/rand.

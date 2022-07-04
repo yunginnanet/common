@@ -19,42 +19,33 @@ Mauris ut mi quis est vehicula molestie. Mauris eu varius urna. Integer sodales 
 
 func TestGzip(t *testing.T) {
 	gsUp := Gzip([]byte(lip))
-
 	if bytes.Equal(gsUp, []byte(lip)) {
-		t.Fatalf("Gzip didn't change the data at all despite being error free...")
+		t.Fatalf("[FAIL] Gzip didn't change the data at all despite being error free...")
 	}
-
 	if len(gsUp) == len([]byte(lip)) || len(gsUp) > len([]byte(lip)) {
-		t.Fatalf("Gzip didn't change the sise of the data at all (or it grew)...")
+		t.Fatalf("[FAIL] Gzip didn't change the sise of the data at all (or it grew)...")
 	}
-
 	if len(gsUp) == 0 {
 		t.Fatalf("[FAIL] ended up with 0 bytes after compression...")
 	}
-
 	profit := len([]byte(lip)) - len(gsUp)
 	t.Logf("[PASS] Gzip compress succeeded, squished %d bytes.", profit)
-
 	hosDown, err := Gunzip(gsUp)
-
 	if err != nil {
 		t.Fatalf("Gzip decompression failed: %e", err)
 	}
-
 	if !bytes.Equal(hosDown, []byte(lip)) {
-		t.Fatalf("Gzip decompression failed, data does not appear to be the same after decompression")
+		t.Fatalf("[FAIL] Gzip decompression failed, data does not appear to be the same after decompression")
 	}
-
 	if len(hosDown) != len([]byte(lip)) {
-		t.Fatalf("Gzip decompression failed, data [%d] does not appear to be the same [%d] length after decompression", hosDown, len([]byte(lip)))
+		t.Fatalf("[FAIL] Gzip decompression failed, data [%d] does not appear to be the same [%d] length after decompression", hosDown, len([]byte(lip)))
 	}
-
 	t.Logf("[PASS] Gzip decompress succeeded, restored %d bytes.", profit)
-
 	_, err = Gunzip(nil)
-
+	if err == nil {
+		t.Fatalf("[FAIL] Gunzip didn't fail on nil input")
+	}
 }
-
 func TestUnpackStr(t *testing.T) {
 	packed := B64e(Gzip([]byte(lip)))
 	unpacked, err := UnpackStr(packed)
@@ -62,8 +53,13 @@ func TestUnpackStr(t *testing.T) {
 	case err != nil:
 		t.Fatalf("[FAIL] %e", err)
 	case unpacked != lip:
-		t.Fatalf("unpackstr decided to not work, who knows why. If you see this than I have already become a janitor.")
+		t.Fatalf("[FAIL] unpackstr decided to not work, who knows why. If you see this than I have already become a janitor.")
 	default:
 		t.Logf("[PASS] TestUnpackStr")
 	}
+	_, nilerr := UnpackStr("")
+	if nilerr == nil {
+		t.Fatalf("[FAIL] unpackstr didn't fail on empty input")
+	}
+
 }

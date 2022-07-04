@@ -49,10 +49,7 @@ const (
 // GetUname uses system calls to retrieve the same values as the uname linux command
 func GetUname(unameFlags string) (un string, err error) {
 	ub := &syscall.Utsname{}
-	err = syscall.Uname(ub)
-	if err != nil {
-		return
-	}
+	_ = syscall.Uname(ub)
 	var targets []*[65]int8
 	for _, n := range unameFlags {
 		var flag = [1]string{string(n)}

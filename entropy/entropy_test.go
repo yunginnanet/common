@@ -43,8 +43,6 @@ func Test_RandStr(t *testing.T) {
 		one := RandStr(55)
 		t.Logf("Random0: %s Random1: %s", zero, one)
 		randStrChecks(zero, one, t)
-		zero = ""
-		one = ""
 	}
 
 }
@@ -70,14 +68,15 @@ func Test_RandStr_Entropy(t *testing.T) {
 				zero, one, similarity)
 		}
 		t.Logf("[ENTROPY] Similarity score (lower is better): %d", similarity)
-		totalScore = totalScore + similarity
-		zero = ""
-		one = ""
+		totalScore += similarity
 	}
 	t.Logf("[ENTROPY] final score (lower is better): %d", totalScore)
 }
 
 func Test_RandomStrChoice(t *testing.T) {
+	if RandomStrChoice([]string{}) != "" {
+		t.Fatalf("RandomStrChoice returned a value when given an empty slice")
+	}
 	var slice []string
 	for n := 0; n != 500; n++ {
 		slice = append(slice, RandStr(555))

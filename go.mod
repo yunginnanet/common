@@ -3,6 +3,7 @@ module git.tcp.direct/kayos/common
 go 1.18
 
 require (
+	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.26.1
 	golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
