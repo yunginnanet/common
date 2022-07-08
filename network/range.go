@@ -2,10 +2,14 @@ package network
 
 import ipa "inet.af/netaddr"
 
-// IterateNetRange will ingest either a netaddr range or a netaddr prefix from the inet.af/netaddr package;
-// returning a channel that will stream all the individual netaddr IPs within the given range or prefix.
-// Alternatively, feed it a string in prefix or range format. (192.168.69.0/24) (192.168.69.0-192.168.69.254)
-// Will return nil value if input is invalid.
+/*IterateNetRange will ingest:
+  - an inet.af/netaddr.Range
+  - an inet.af/netaddr.Prefix
+  - or a string to be parsed as either of the above options
+    - examples: (192.168.69.0/24) (192.168.69.0-192.168.69.254)
+
+  then it returns a channel that will stream all the individual netaddr.IP types within the given range or prefix.
+  if the input is invalid this function will return nil.*/
 func IterateNetRange(ips interface{}) chan ipa.IP {
 	var addrs ipa.IPRange
 
