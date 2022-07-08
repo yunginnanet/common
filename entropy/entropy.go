@@ -23,6 +23,14 @@ func RandomStrChoice(choice []string) string {
 	return ""
 }
 
+// GetRandomSliceValue returns a random item from an input slice of strings.
+func GetRandomSliceValue(choice ...any) any {
+	if len(choice) > 0 {
+		return choice[RNGUint32()%uint32(len(choice))]
+	}
+	return nil
+}
+
 // GetCryptoSeed returns a random int64 derived from crypto/rand.
 // This can be used as a seed for the math/rand package.
 func GetCryptoSeed() int64 {

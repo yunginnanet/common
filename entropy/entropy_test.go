@@ -84,15 +84,27 @@ func Test_RandStr_Entropy(t *testing.T) {
 	t.Logf("[ENTROPY] final score (lower is better): %d (RandStr)", totalScore)
 }
 
-func Test_RandomStrChoice(t *testing.T) {
+func sliceTest[T comparable](t *testing.T, do func(...T) T) {
+	var slice []T
+	for n := 0; n != 500; n++ {
+		var item interface{} = RandStr(555)
+		slice = append(slice, item)
+	}
+	check(do(slice), do(slice), t)
+}
+
+func Test_RandomSliceValue(t *testing.T) {
 	if RandomStrChoice([]string{}) != "" {
 		t.Fatalf("RandomStrChoice returned a value when given an empty slice")
 	}
-	var slice []string
-	for n := 0; n != 500; n++ {
-		slice = append(slice, RandStr(555))
+	sliceTest(t, GetRandomSliceValue)
+}
+
+func Test_RandomStrChoice(t *testing.T) {
+	if GetRandomSliceValue([]interface{}{}) != nil {
+		t.Fatalf("GetRandomSliceValue returned a value when given an empty slice")
 	}
-	check(RandomStrChoice(slice), RandomStrChoice(slice), t)
+	sliceTest(t, RandomStrChoice)
 }
 
 func Test_RNGUint32(t *testing.T) {
