@@ -4,9 +4,15 @@ import (
 	crip "crypto/rand"
 	"encoding/binary"
 	"math/rand"
+	"sync"
 	"time"
 
 	"nullprogram.com/x/rng"
+)
+
+var (
+	sharedRand    *rand.Rand
+	getSharedRand = &sync.Once{}
 )
 
 // RandomStrChoice returns a random item from an input slice of strings.
@@ -25,7 +31,8 @@ func GetCryptoSeed() int64 {
 	return seed
 }
 
-// GetOptimizedRand returns a pointer to a new rand.Rand which uses crypto/rand to seed a splitmix64 rng.
+// GetOptimizedRand returns a pointer to a *new* rand.Rand which uses crypto/rand to seed a splitmix64 rng.
+// Does not use the global/shared instance of a splitmix64 rng, but instead creates a new one.
 func GetOptimizedRand() *rand.Rand {
 	r := new(rng.SplitMix64)
 	r.Seed(GetCryptoSeed())
@@ -34,14 +41,25 @@ func GetOptimizedRand() *rand.Rand {
 
 // RNGUint32 returns a random uint32 using crypto/rand and splitmix64.
 func RNGUint32() uint32 {
-	r := GetOptimizedRand()
-	return r.Uint32()
+	getSharedRand.Do(func() {
+		sharedRand = GetOptimizedRand()
+	})
+	return sharedRand.Uint32()
 }
 
-// RNG returns integer with a maximum amount of 'n' using crypto/rand and splitmix64.
+/*RNG returns integer with a maximum amount of 'n' using a global/shared instance of a splitmix64 rng.
+  - Benchmark_FastRandStr5-24            25205089      47.03 ns/op
+  - Benchmark_FastRandStr25-24       	7113620     169.8  ns/op
+  - Benchmark_FastRandStr55-24       	3520297     340.7  ns/op
+  - Benchmark_FastRandStr500-24      	 414966    2837    ns/op
+  - Benchmark_FastRandStr55555-24    	   3717  315229    ns/op
+
+*/
 func RNG(n int) int {
-	r := GetOptimizedRand()
-	return r.Intn(n)
+	getSharedRand.Do(func() {
+		sharedRand = GetOptimizedRand()
+	})
+	return sharedRand.Intn(n)
 }
 
 // OneInA generates a random number with a maximum of 'million' (input int).
