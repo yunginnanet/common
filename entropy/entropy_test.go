@@ -2,6 +2,7 @@ package entropy
 
 import (
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -41,10 +42,10 @@ func Test_RandStr(t *testing.T) {
 	for n := 0; n != 500; n++ {
 		zero := RandStr(55)
 		one := RandStr(55)
-		t.Logf("Random0: %s Random1: %s", zero, one)
+		// t.Logf("Random0: %s Random1: %s", zero, one)
 		randStrChecks(zero, one, t)
 	}
-
+	t.Logf("[SUCCESS] RandStr had no collisions")
 }
 
 func Test_RandStr_Entropy(t *testing.T) {
@@ -67,10 +68,10 @@ func Test_RandStr_Entropy(t *testing.T) {
 			t.Errorf("[ENTROPY FAILURE] more than a quarter of the string is the same!\n zero: %s \n one: %s \nTotal similar: %d",
 				zero, one, similarity)
 		}
-		t.Logf("[ENTROPY] Similarity score (lower is better): %d", similarity)
+		// t.Logf("[ENTROPY] Similarity score (lower is better): %d", similarity)
 		totalScore += similarity
 	}
-	t.Logf("[ENTROPY] final score (lower is better): %d", totalScore)
+	t.Logf("[ENTROPY] final score (lower is better): %d (RandStr)", totalScore)
 }
 
 func Test_RandomStrChoice(t *testing.T) {
@@ -82,4 +83,41 @@ func Test_RandomStrChoice(t *testing.T) {
 		slice = append(slice, RandStr(555))
 	}
 	check(RandomStrChoice(slice), RandomStrChoice(slice), t)
+}
+
+func Test_RNGUint32(t *testing.T) {
+	// start globals fresh, just for coverage.
+	sharedRand = GetOptimizedRand()
+	getSharedRand = &sync.Once{}
+	RNGUint32()
+}
+
+func Benchmark_RandStr5(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStr(5)
+	}
+}
+
+func Benchmark_RandStr25(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStr(25)
+	}
+}
+
+func Benchmark_RandStr55(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStr(55)
+	}
+}
+
+func Benchmark_RandStr500(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStr(500)
+	}
+}
+
+func Benchmark_RandStr55555(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStr(55555)
+	}
 }
