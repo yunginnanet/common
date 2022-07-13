@@ -28,11 +28,11 @@ func Test_RNG(t *testing.T) {
 	}
 }
 
-func randStrChecks(zero, one string, t *testing.T) {
+func randStrChecks(zero, one string, t *testing.T, intendedLength int) {
 	if len(zero) != len(one) {
 		t.Fatalf("RandStr output length inconsistency, len(zero) is %d but wanted len(one) which is %d", len(zero), len(one))
 	}
-	if len(zero) != 55 || len(one) != 55 {
+	if len(zero) != intendedLength || len(one) != intendedLength {
 		t.Fatalf("RandStr output length inconsistency, len(zero) is %d and len(one) is %d, but both should have been 55", len(zero), len(one))
 	}
 	check(zero, one, t)
@@ -42,8 +42,18 @@ func Test_RandStr(t *testing.T) {
 	for n := 0; n != 500; n++ {
 		zero := RandStr(55)
 		one := RandStr(55)
-		// t.Logf("Random0: %s Random1: %s", zero, one)
-		randStrChecks(zero, one, t)
+		t.Logf("Random0: %s Random1: %s", zero, one)
+		randStrChecks(zero, one, t, 55)
+	}
+	t.Logf("[SUCCESS] RandStr had no collisions")
+}
+
+func Test_RandStrWithUpper(t *testing.T) {
+	for n := 0; n != 500; n++ {
+		zero := RandStrWithUpper(15)
+		one := RandStrWithUpper(15)
+		t.Logf("Random0: %s Random1: %s", zero, one)
+		randStrChecks(zero, one, t, 15)
 	}
 	t.Logf("[SUCCESS] RandStr had no collisions")
 }
@@ -53,7 +63,7 @@ func Test_RandStr_Entropy(t *testing.T) {
 	for n := 0; n != 500; n++ {
 		zero := RandStr(55)
 		one := RandStr(55)
-		randStrChecks(zero, one, t)
+		randStrChecks(zero, one, t, 55)
 		zeroSplit := strings.Split(zero, "")
 		oneSplit := strings.Split(one, "")
 		var similarity = 0
@@ -119,5 +129,35 @@ func Benchmark_RandStr500(b *testing.B) {
 func Benchmark_RandStr55555(b *testing.B) {
 	for n := 0; n != b.N; n++ {
 		RandStr(55555)
+	}
+}
+
+func Benchmark_RandStrWithUpper5(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStrWithUpper(5)
+	}
+}
+
+func Benchmark_RandStrWithUpper25(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStrWithUpper(25)
+	}
+}
+
+func Benchmark_RandStrWithUpper55(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStrWithUpper(55)
+	}
+}
+
+func Benchmark_RandStrWithUpper500(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStrWithUpper(500)
+	}
+}
+
+func Benchmark_RandStrWithUpper55555(b *testing.B) {
+	for n := 0; n != b.N; n++ {
+		RandStrWithUpper(55555)
 	}
 }

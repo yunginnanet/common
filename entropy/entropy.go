@@ -75,12 +75,24 @@ func RandSleepMS(n int) {
 
 // characters used for the gerneration of random strings.
 const charset = "abcdefghijklmnopqrstuvwxyz1234567890"
+const charsetWithUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 
-// RandStr generates a random alphanumeric string with a max length of size. Charset used is all lowercase.
+// RandStr generates a random alphanumeric string with a max length of size.
+// Alpha charset used is a-z all lowercase.
 func RandStr(size int) string {
 	buf := make([]byte, size)
 	for i := 0; i != size; i++ {
-		buf[i] = charset[uint32(RNG(32))%uint32(len(charset))]
+		buf[i] = charset[uint32(RNG(36))%uint32(len(charset))]
+	}
+	return string(buf)
+}
+
+// RandStrWithUpper generates a random alphanumeric string with a max length of size.
+// Alpha charset used is a-Z mixed case.
+func RandStrWithUpper(size int) string {
+	buf := make([]byte, size)
+	for i := 0; i != size; i++ {
+		buf[i] = charsetWithUpper[uint32(RNG(62))%uint32(len(charsetWithUpper))]
 	}
 	return string(buf)
 }
