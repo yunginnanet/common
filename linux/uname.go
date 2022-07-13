@@ -12,12 +12,12 @@ import (
 type unameFlags uint8
 
 var unameMap = map[[1]string]unameFlags{
-	[1]string{"s"}: UnameOS,
-	[1]string{"m"}: UnameArch,
-	[1]string{"r"}: UnameRelease,
-	[1]string{"d"}: UnameDomain,
-	[1]string{"n"}: UnameHostname,
-	[1]string{"v"}: UnameVersion,
+	{"s"}: UnameOS,
+	{"m"}: UnameArch,
+	{"r"}: UnameRelease,
+	{"d"}: UnameDomain,
+	{"n"}: UnameHostname,
+	{"v"}: UnameVersion,
 }
 
 func unameFlag(flag [1]string) (res unameFlags) {
