@@ -2,6 +2,7 @@ package hash
 
 import (
 	"bytes"
+	"encoding/base64"
 	"os"
 	"testing"
 
@@ -71,33 +72,33 @@ func TestSum(t *testing.T) {
 	}
 
 	var (
-		ogsha1    = squish.B64d(kayosSHA1)
-		ogsha256  = squish.B64d(kayosSHA256)
-		ogsha512  = squish.B64d(kayosSHA512)
-		ogmd5     = squish.B64d(kayosMD5)
-		newsha1   = Sum(TypeSHA1, []byte("kayos\n"))
-		newsha256 = Sum(TypeSHA256, []byte("kayos\n"))
-		newsha512 = Sum(TypeSHA512, []byte("kayos\n"))
-		newmd5    = Sum(TypeMD5, []byte("kayos\n"))
+		ogsha1, _   = base64.StdEncoding.DecodeString(kayosSHA1)
+		ogsha256, _ = base64.StdEncoding.DecodeString(kayosSHA256)
+		ogsha512, _ = base64.StdEncoding.DecodeString(kayosSHA512)
+		ogmd5, _    = base64.StdEncoding.DecodeString(kayosMD5)
+		newsha1     = Sum(TypeSHA1, []byte("kayos\n"))
+		newsha256   = Sum(TypeSHA256, []byte("kayos\n"))
+		newsha512   = Sum(TypeSHA512, []byte("kayos\n"))
+		newmd5      = Sum(TypeMD5, []byte("kayos\n"))
 	)
 
 	if !bytes.Equal(newsha1, ogsha1) {
-		t.Fatalf("[sha1] wanted: %v, got %v", kayosSHA1, squish.B64e(newsha1))
+		t.Fatalf("[sha1] wanted: %v, got %v", ogsha1, newsha1)
 	}
 	t.Logf("[sha1]   success: %s", kayosSHA1)
 
 	if !bytes.Equal(newsha256, ogsha256) {
-		t.Fatalf("[sha256] wanted: %v, got %v", kayosSHA256, squish.B64e(newsha256))
+		t.Fatalf("[sha256] wanted: %v, got %v", ogsha256, newsha256)
 	}
 	t.Logf("[sha256] success: %s", kayosSHA256)
 
 	if !bytes.Equal(newsha512, ogsha512) {
-		t.Fatalf("[sha512] wanted: %v, got %v", kayosSHA512, squish.B64e(newsha512))
+		t.Fatalf("[sha512] wanted: %v, got %v", ogsha512, newsha512)
 	}
 	t.Logf("[sha512] success: %s", kayosSHA512)
 
 	if !bytes.Equal(newmd5, ogmd5) {
-		t.Fatalf("[md5] wanted: %v, got %v", kayosMD5, squish.B64e(newmd5))
+		t.Fatalf("[md5] wanted: %v, got %v", ogmd5, newmd5)
 	}
 	t.Logf("[md5]    success: %s", kayosMD5)
 }

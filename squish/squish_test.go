@@ -2,7 +2,10 @@ package squish
 
 import (
 	"bytes"
+	"encoding/base64"
 	"testing"
+
+	"git.tcp.direct/kayos/common/entropy"
 )
 
 const lip string = `
@@ -32,7 +35,7 @@ func TestGzip(t *testing.T) {
 	t.Logf("[PASS] Gzip compress succeeded, squished %d bytes.", profit)
 	hosDown, err := Gunzip(gsUp)
 	if err != nil {
-		t.Fatalf("Gzip decompression failed: %e", err)
+		t.Fatalf("Gzip decompression failed: %s", err.Error())
 	}
 	if !bytes.Equal(hosDown, []byte(lip)) {
 		t.Fatalf("[FAIL] Gzip decompression failed, data does not appear to be the same after decompression")
@@ -46,14 +49,114 @@ func TestGzip(t *testing.T) {
 		t.Fatalf("[FAIL] Gunzip didn't fail on nil input")
 	}
 }
-func TestUnpackStr(t *testing.T) {
-	packed := B64e(Gzip([]byte(lip)))
+
+func TestGunzipMustFails(t *testing.T) {
+	blank := ""
+	_, err := Gunzip([]byte(blank))
+	if err == nil {
+		t.Fatalf("[FAIL] Gunzip didn't fail on empty input")
+	}
+	_, err = UnpackStr(blank)
+	if err == nil {
+		t.Fatalf("[FAIL] UnpackStr didn't fail on empty input")
+	}
+	junk := "junk"
+	_, err = Gunzip([]byte(junk))
+	if err == nil {
+		t.Fatalf("[FAIL] Gunzip didn't fail on junk input")
+	}
+	_, err = UnpackStr(junk)
+	if err == nil {
+		t.Fatalf("[FAIL] UnpackStr didn't fail on junk input")
+	}
+}
+
+func TestGzipEntropic(t *testing.T) {
+	for i := 0; i < 50; i++ {
+		dat := []byte(entropy.RandStr(entropy.RNG(55) * 1024))
+		for len(dat) < 1024 {
+			dat = []byte(entropy.RandStr(entropy.RNG(55) * 1024))
+		}
+		gzTest(dat, t)
+	}
+}
+
+func gzTest(dat []byte, t *testing.T) {
+	t.Logf("Testing Gzip on %d bytes of data", len(dat))
+	gsUp := Gzip(dat)
+	if bytes.Equal(gsUp, dat) {
+		t.Fatalf("[FAIL] Gzip didn't change the data at all despite being error free...")
+	}
+	if len(gsUp) == len(dat) || len(gsUp) > len(dat) {
+		t.Fatalf("[FAIL] Gzip didn't change the sise of the data at all (or it grew)... before: %d  after: %d",
+			len(dat), len(gsUp))
+	}
+	if len(gsUp) == 0 {
+		t.Fatalf("[FAIL] ended up with 0 bytes after compression...")
+	}
+	profit := len(dat) - len(gsUp)
+	t.Logf("[PASS] Gzip compress succeeded, squished %d bytes.", profit)
+	hosDown, err := Gunzip(gsUp)
+	if err != nil {
+		t.Fatalf("Gzip decompression failed: %s", err.Error())
+	}
+	if !bytes.Equal(hosDown, dat) {
+		t.Fatalf("[FAIL] Gzip decompression failed, data does not appear to be the same after decompression")
+	}
+	if len(hosDown) != len(dat) {
+		t.Fatalf("[FAIL] Gzip decompression failed, data [%d] does not appear to be the same [%d] length after decompression", hosDown, len(dat))
+	}
+	t.Logf("[PASS] Gzip decompress succeeded, restored %d bytes.", profit)
+}
+
+func TestGzipDeterministic(t *testing.T) {
+	packed := Gzip([]byte(lip))
+	for n := 0; n < 10; n++ {
+		again := Gzip([]byte(lip))
+		if !bytes.Equal(again, packed) {
+			t.Fatalf("[FAIL] Gzip is not deterministic")
+		}
+	}
+}
+
+func TestUnpackStr(t *testing.T) { //nolint:cyclop
+	gzd := Gzip([]byte(lip))
+	if len(gzd) == 0 {
+		t.Fatalf("[FAIL] Gzip failed to compress data")
+	}
+	gzdSanity, gzdErr := Gunzip(gzd)
+	if gzdErr != nil {
+		t.Fatalf("Gzip failed: %s", gzdErr.Error())
+	}
+	if !bytes.Equal(gzdSanity, []byte(lip)) {
+		t.Fatalf("Bytes not equal after Gzip: %v != %v", gzdSanity, []byte(lip))
+	}
+	packed := B64e(gzd)
+	if len(packed) == 0 {
+		t.Fatalf("[FAIL] B64e failed to encode data")
+	}
+	t.Logf("Packed: %s", packed)
+	sanity1, err1 := base64.StdEncoding.DecodeString(packed)
+	if err1 != nil {
+		t.Fatalf("b64 failed: %s", err1.Error())
+	}
+	if !bytes.Equal(sanity1, gzd) {
+		t.Fatalf("Bytes not equal after b64: %v != %v", sanity1, gzd)
+	}
+	sanity2, err2 := Gunzip(sanity1)
+	if err2 != nil {
+		t.Fatalf("Gzip failed: %s", err2.Error())
+	}
+	if !bytes.Equal(sanity2, []byte(lip)) {
+		t.Fatalf("Bytes not equal after Gzip: %v != %v", sanity2, []byte(lip))
+	}
 	unpacked, err := UnpackStr(packed)
 	switch {
 	case err != nil:
-		t.Fatalf("[FAIL] %e", err)
+		t.Errorf("[FAIL] %s", err.Error())
 	case unpacked != lip:
-		t.Fatalf("[FAIL] unpackstr decided to not work, who knows why. If you see this than I have already become a janitor.")
+		t.Fatalf("[FAIL] unpackstr decided to not work, who knows why. If you see this than I have already become a janitor.\n"+
+			"unpacked: %s != packed: %s", unpacked, lip)
 	default:
 		t.Logf("[PASS] TestUnpackStr")
 	}
