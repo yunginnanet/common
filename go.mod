@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
 	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8
 	inet.af/netaddr v0.0.0-20220811202034-502d2d690317
 	nullprogram.com/x/rng v1.1.0
