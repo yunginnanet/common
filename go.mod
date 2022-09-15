@@ -17,3 +17,7 @@ require (
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
 	golang.org/x/sys v0.0.0-20210927094055-39ccf1dd6fa6 // indirect
 )
+
+retract (
+	v0.0.0-20220210125455-40e3d2190a52
+)
