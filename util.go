@@ -17,6 +17,14 @@ func Fprint(w io.Writer, s string) {
 	}
 }
 
+// Fprintf is fmt.Fprintf with error handling.
+func Fprintf(w io.Writer, format string, items ...any) {
+	_, err := fmt.Fprintf(w, format, items...)
+	if err != nil {
+		log.Error().Str("fmt", format).Err(err).Msg("Fprintf failed!")
+	}
+}
+
 // Abs will give you the positive version of a negative integer, quickly.
 func Abs(n int) int {
 	// ayyee smash 6ros

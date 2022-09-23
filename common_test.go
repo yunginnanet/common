@@ -45,12 +45,19 @@ func TestBlakeEqualAndB64(t *testing.T) {
 
 	// sneakin in some code coverage rq dwai nbd
 	bogusRd, bogusWrt := io.Pipe()
+	bogusRd2, bogusWrt2 := io.Pipe()
 	t.Logf("\n")
 	go func() {
-		Fprint(io.MultiWriter(bogusWrt, os.Stdout), fmt.Sprintf("[PASS] based[0] = %s\n[PASS] based[1] = %s", string(based[0]), string(based[1])))
+		Fprint(io.MultiWriter(bogusWrt, os.Stdout), fmt.Sprintf("[PASS] based[0] = %s", string(based[0])))
+		Fprintf(io.MultiWriter(bogusWrt2, os.Stdout), "\n[PASS] based[1] = %s", string(based[0]))
 	}()
 	_ = bogusWrt.CloseWithError(io.ErrClosedPipe)
+	_ = bogusWrt2.CloseWithError(io.ErrClosedPipe)
 	_, err := bogusRd.Read([]byte{})
+	if err == nil {
+		t.Fatalf("should have been an error...")
+	}
+	_, err = bogusRd2.Read([]byte{})
 	if err == nil {
 		t.Fatalf("should have been an error...")
 	}
