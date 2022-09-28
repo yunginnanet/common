@@ -99,7 +99,6 @@ type phonyWriter struct{}
 
 var o = &sync.Once{}
 var fprintStatus bool
-var pw = new(phonyWriter)
 
 func (p2 phonyWriter) Write(p []byte) (int, error) {
 	var err = errors.New("closed")
@@ -115,11 +114,23 @@ func (p2 phonyWriter) Write(p []byte) (int, error) {
 }
 
 func TestFprint(t *testing.T) {
+	var pw = new(phonyWriter)
 	Fprint(pw, "asdf")
 	if fprintStatus != true {
 		t.Fatal("first Fprint test should have succeeded")
 	}
 	Fprint(pw, "asdf")
+	if fprintStatus != false {
+		t.Fatal("second Fprint test should not have succeeded")
+	}
+	pw = new(phonyWriter)
+	fprintStatus = false
+	o = &sync.Once{}
+	Fprintf(pw, "%s", "asdf")
+	if fprintStatus != true {
+		t.Fatal("first Fprint test should have succeeded")
+	}
+	Fprintf(pw, "%s", "asdf")
 	if fprintStatus != false {
 		t.Fatal("second Fprint test should not have succeeded")
 	}
