@@ -80,7 +80,6 @@ func TestIterateNetRange(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		index := 0
 		retchan := IterateNetRange(tt.args.ips)
 		if tt.want == nil && retchan != nil {
 			t.Fatalf("return should have been nil, it was %v", retchan)
@@ -89,21 +88,14 @@ func TestIterateNetRange(t *testing.T) {
 			continue
 		}
 		t.Logf("test: %s", tt.name)
-	mainloop:
-		for {
-			select {
-			case ip := <-retchan:
-				if ip.String() != test29[index].String() {
-					t.Errorf("[%s] failed, wanted %s, got %s", tt.name, tt.want[index].String(), ip.String())
-				} else {
-					t.Logf("[%s] success (%s == %s)", tt.name, tt.want[index].String(), ip.String())
-				}
-				index++
-			default:
-				if index == 7 {
-					break mainloop
-				}
+		index := 0
+		for ip := range retchan {
+			if ip.String() != test29[index].String() {
+				t.Errorf("[%s] failed, wanted %s, got %s", tt.name, tt.want[index].String(), ip.String())
+			} else {
+				t.Logf("[%s] success (%s == %s)", tt.name, tt.want[index].String(), ip.String())
 			}
+			index++
 		}
 	}
 }
