@@ -11,9 +11,11 @@ IterateNetRange will ingest:
 
   - or a string to be parsed as either of the above options
 
-  - examples: (192.168.69.0/24) (192.168.69.0-192.168.69.254)
+  - valid subnet string example: 192.168.69.0/24
 
-    then it returns a channel that will stream all the individual netaddr.IP types within the given range or prefix.
+  - valid range string example: 192.168.69.0-192.168.69.254
+
+    it then returns a channel that will stream all the individual netaddr.IP types within the given range or prefix.
     if the input is invalid this function will return nil.
 */
 func IterateNetRange(ips interface{}) chan ipa.IP {
@@ -39,13 +41,14 @@ func IterateNetRange(ips interface{}) chan ipa.IP {
 		return nil
 	}
 
-	ch := make(chan ipa.IP)
+	ch := make(chan ipa.IP, 254)
 	go func(ret chan ipa.IP) {
 		for head := addrs.From(); head != addrs.To(); head = head.Next() {
 			if !head.IsUnspecified() {
 				ret <- head
 			}
 		}
+		close(ret)
 	}(ch)
 	return ch
 }
