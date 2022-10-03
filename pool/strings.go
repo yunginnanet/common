@@ -1,16 +1,22 @@
 package pool
 
 import (
-	"errors"
 	"strings"
 	"sync"
 )
 
-var ErrBufferReturned = errors.New("buffer already returned")
-
 type String struct {
 	*strings.Builder
-	*sync.Once
+	o *sync.Once
+}
+
+// NewStringFactory creates a new strings.Builder pool.
+func NewStringFactory() StringFactory {
+	return StringFactory{
+		pool: &sync.Pool{
+			New: func() any { return new(strings.Builder) },
+		},
+	}
 }
 
 func (s String) String() string {
@@ -33,6 +39,17 @@ func (s String) WriteString(str string) (int, error) {
 		return 0, ErrBufferReturned
 	}
 	return s.Builder.WriteString(str)
+}
+
+// MustWstr means Must Write String, like WriteString but will panic on error.
+func (s String) MustWstr(str string) {
+	if s.Builder == nil {
+		panic(ErrBufferReturned)
+	}
+	if str == "" {
+		panic("nil string")
+	}
+	_, _ = s.Builder.WriteString(str)
 }
 
 func (s String) Len() int {
@@ -82,25 +99,29 @@ type StringFactory struct {
 	pool *sync.Pool
 }
 
-// NewStringFactory creates a new strings.Builder pool.
-func NewStringFactory() StringFactory {
-	return StringFactory{
-		pool: &sync.Pool{
-			New: func() any { return new(strings.Builder) },
-		},
-	}
-}
-
 // Put returns a strings.Builder back into to the pool after resetting it.
 func (sf StringFactory) Put(buf *String) error {
 	var err = ErrBufferReturned
-	buf.Do(func() {
+	buf.o.Do(func() {
 		_ = buf.Reset()
 		sf.pool.Put(buf.Builder)
 		buf.Builder = nil
 		err = nil
 	})
 	return err
+}
+
+func (sf StringFactory) MustPut(buf *String) {
+	var err = ErrBufferReturned
+	buf.o.Do(func() {
+		_ = buf.Reset()
+		sf.pool.Put(buf.Builder)
+		buf.Builder = nil
+		err = nil
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Get returns a strings.Builder from the pool.
