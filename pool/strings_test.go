@@ -6,7 +6,9 @@ import (
 )
 
 func assertPanic(t *testing.T, f func()) {
+	t.Helper()
 	defer func() {
+		t.Helper()
 		if r := recover(); r == nil {
 			t.Errorf("The code did not panic")
 		}
@@ -15,10 +17,10 @@ func assertPanic(t *testing.T, f func()) {
 }
 
 func TestStringFactoryPanic(t *testing.T) {
-	s := NewStringFactory()
+	sf := NewStringFactory()
 	t.Run("StringsMustWrite", func(t *testing.T) {
-		buf := s.Get()
-		buf.MustWstr("hello world")
+		buf := sf.Get()
+		buf.MustWriteString("hello world")
 		if buf.Len() == 0 {
 			t.Fatalf("The buffer is empty after we wrote to it")
 		}
@@ -28,28 +30,51 @@ func TestStringFactoryPanic(t *testing.T) {
 	})
 	t.Run("StringsMustWritePanic", func(t *testing.T) {
 		var badString *string = nil
-		buf := s.Get()
+		buf := sf.Get()
 		assertPanic(t, func() {
-			buf.MustWstr(*badString)
+			buf.MustWriteString(*badString)
 		})
 		assertPanic(t, func() {
-			buf.MustWstr("")
+			buf.MustWriteString("")
 		})
-		if err := s.Put(buf); err != nil {
+		if err := sf.Put(buf); err != nil {
 			t.Fatalf("The buffer was not returned: %v", err)
 		}
 	})
-	t.Run("StringsPanic", func(t *testing.T) {
-		buf := s.Get()
-		err := s.Put(buf)
+	t.Run("StringsMustString", func(t *testing.T) {
+		buf := sf.Get()
+		buf.MustWriteString("hello world")
+		if buf.MustString() != "hello world" {
+			t.Fatalf("The buffer has the wrong content")
+		}
+		sf.MustPut(buf)
+		assertPanic(t, func() {
+			buf.MustString()
+		})
+	})
+	t.Run("StringsMust", func(t *testing.T) {
+		buf := sf.Get()
+		buf.MustReset()
+		_ = buf.MustLen()
+		buf.MustGrow(10)
+		err := sf.Put(buf)
 		if err != nil {
 			t.Fatalf("The buffer was not returned: %v", err)
 		}
 		assertPanic(t, func() {
-			s.MustPut(buf)
+			sf.MustPut(buf)
 		})
 		assertPanic(t, func() {
-			buf.MustWstr("hello")
+			buf.MustWriteString("hello")
+		})
+		assertPanic(t, func() {
+			buf.MustGrow(10)
+		})
+		assertPanic(t, func() {
+			buf.MustLen()
+		})
+		assertPanic(t, func() {
+			buf.MustReset()
 		})
 	})
 }
@@ -133,7 +158,7 @@ func TestStringFactory(t *testing.T) {
 	})
 	t.Run("StringPoolCleanBuffer", func(t *testing.T) {
 		t.Parallel()
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(25 * time.Millisecond)
 		got := s.Get()
 		if got.String() != "" {
 			t.Fatalf("should have gotten a clean buffer")
