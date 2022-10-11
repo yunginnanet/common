@@ -39,6 +39,14 @@ func GetOptimizedRand() *rand.Rand {
 	return rand.New(r)
 }
 
+// GetSharedRand returns a pointer to our shared optimized rand.Rand which uses crypto/rand to seed a splitmix64 rng.
+func GetSharedRand() *rand.Rand {
+	getSharedRand.Do(func() {
+		sharedRand = GetOptimizedRand()
+	})
+	return sharedRand
+}
+
 // RNGUint32 returns a random uint32 using crypto/rand and splitmix64.
 func RNGUint32() uint32 {
 	getSharedRand.Do(func() {

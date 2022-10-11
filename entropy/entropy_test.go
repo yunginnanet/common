@@ -13,7 +13,12 @@ func check[T comparable](zero T, one T, t *testing.T) {
 }
 
 func Test_RNG(t *testing.T) {
+	// for coverage
+	sharedRand = GetSharedRand()
 	RandSleepMS(5)
+	sharedRand = nil
+	getSharedRand = &sync.Once{}
+	//  - - - - - -
 	if OneInA(1000000) {
 		println(string([]byte{
 			0x66, 0x75, 0x63, 0x6B, 0x68,
