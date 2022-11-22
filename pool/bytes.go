@@ -150,6 +150,8 @@ func (c Buffer) WriteString(str string) (int, error) {
 	return c.Buffer.WriteString(str)
 }
 
+// Grow grows the buffer's capacity, if necessary, to guarantee space for another n bytes. After Grow(n), at least n bytes can be written to the buffer without another allocation. If n is negative, Grow will panic. If the buffer can't grow it will panic with ErrTooLarge.
+// If the buffer has already been returned to the pool, Grow will return ErrBufferReturned.
 func (c Buffer) Grow(n int) error {
 	if c.Buffer == nil {
 		return ErrBufferReturned

@@ -5,15 +5,13 @@ import (
 	"fmt"
 	"io"
 	"math"
-
-	"github.com/rs/zerolog/log"
 )
 
 // Fprint is fmt.Fprint with error handling.
 func Fprint(w io.Writer, s string) {
 	_, err := fmt.Fprint(w, s)
 	if err != nil {
-		log.Error().Str("data", s).Err(err).Msg("Fprint failed!")
+		println("common.Fprint failed: " + err.Error())
 	}
 }
 
@@ -21,7 +19,7 @@ func Fprint(w io.Writer, s string) {
 func Fprintf(w io.Writer, format string, items ...any) {
 	_, err := fmt.Fprintf(w, format, items...)
 	if err != nil {
-		log.Error().Str("fmt", format).Err(err).Msg("Fprintf failed!")
+		println("common.Fprintf failed: " + err.Error())
 	}
 }
 
