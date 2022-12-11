@@ -73,6 +73,9 @@ func RNG(n int) int {
 // OneInA generates a random number with a maximum of 'million' (input int).
 // If the resulting random number is equal to 1, then the result is true.
 func OneInA(million int) bool {
+	if million == 1 {
+		return true
+	}
 	return RNG(million) == 1
 }
 

@@ -6,9 +6,13 @@ import (
 	"testing"
 )
 
+var dupCount = 0
+
 func check[T comparable](zero T, one T, t *testing.T) {
 	if zero == one {
+		dupCount++
 		t.Errorf("hit a duplicate! %v == %v", zero, one)
+		t.Logf("duplicates so far: %d", dupCount)
 	}
 }
 
@@ -30,6 +34,18 @@ func Test_RNG(t *testing.T) {
 	for n := 0; n != 500; n++ {
 		check(RNG(55555), RNG(55555), t)
 		check(RNGUint32(), RNGUint32(), t)
+	}
+}
+
+func Test_OneInA(t *testing.T) {
+	for n := 0; n < 100; n++ {
+		yes := ""
+		if OneInA(1) {
+			yes = "hello"
+		}
+		if yes != "hello" {
+			t.Fatalf("OneInA failed to trigger when provided '1' as an argument")
+		}
 	}
 }
 
