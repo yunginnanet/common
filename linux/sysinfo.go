@@ -42,15 +42,12 @@ import (
 */
 
 type SystemInfo struct {
+	// Uptime is the time since the system was booted.
 	Uptime time.Duration
-	Loads  [3]uint64
-
+	// Loads is a 3 element array containing the 1, 5, and 15 minute load averages.
+	Loads [3]uint64
+	// RAM is a struct containing information about the system's RAM. See notes on this.
 	RAM RAMInfo
-
-	// Totalswap is the total amount of swap space available.
-	Totalswap uint64
-	// Freeswap is the amount of swap space still available.
-	Freeswap uint64
 	// Procs is the number of current processes.
 	Procs uint16
 }
@@ -77,6 +74,7 @@ type RAMInfo struct {
 
 // Sysinfo returns a SystemInfo struct containing information about the running system.
 // For memory, please see important notes in the RAMInfo struct definition and the top of this file.
+// Be sure to check err before using the returned value.
 func Sysinfo() (systemInfo *SystemInfo, err error) {
 	sysinf := syscall.Sysinfo_t{}
 	err = syscall.Sysinfo(&sysinf)
@@ -95,14 +93,14 @@ func Sysinfo() (systemInfo *SystemInfo, err error) {
 			SwapFree:  int64(sysinf.Freeswap * unit),
 			unit:      sysinf.Unit,
 		},
-		Totalswap: sysinf.Totalswap,
-		Freeswap:  sysinf.Freeswap,
-		Procs:     sysinf.Procs,
+		Procs: sysinf.Procs,
 	}, nil
 }
 
+// Uptime returns the time since the system was booted.
+// Be sure to check err before using the returned value.
 func Uptime() (utime time.Duration, err error) {
 	var sysinf *SystemInfo
 	sysinf, err = Sysinfo()
-	return sysinf.Uptime, nil
+	return sysinf.Uptime, err
 }
