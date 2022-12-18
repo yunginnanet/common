@@ -10,7 +10,7 @@ import (
 /*
 	some interesting information on RAM, sysinfo, and /proc/meminfo
 
-	- https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=34e431b0ae398fc54ea69ff85ec700722c9da773 //nolint:lll
+	- https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=34e431b0ae398fc54ea69ff85ec700722c9da773
 	- https://github.com/mmalecki/procps/blob/master/proc/sysinfo.c
 
 	in the second link we see that even procps is parsing /proc/meminfo to get the RAM information
@@ -79,7 +79,7 @@ func Sysinfo() (systemInfo *SystemInfo, err error) {
 	sysinf := syscall.Sysinfo_t{}
 	err = syscall.Sysinfo(&sysinf)
 	unit := uint64(sysinf.Unit)
-	return &SystemInfo{
+	systemInfo = &SystemInfo{
 		Uptime: time.Duration(sysinf.Uptime) * time.Second,
 		Loads:  [3]uint64{sysinf.Loads[0], sysinf.Loads[1], sysinf.Loads[2]},
 		RAM: RAMInfo{
@@ -94,7 +94,8 @@ func Sysinfo() (systemInfo *SystemInfo, err error) {
 			unit:      sysinf.Unit,
 		},
 		Procs: sysinf.Procs,
-	}, nil
+	}
+	return
 }
 
 // Uptime returns the time since the system was booted.
