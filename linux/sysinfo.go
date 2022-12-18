@@ -10,7 +10,7 @@ import (
 /*
 	some interesting information on RAM, sysinfo, and /proc/meminfo
 
-	- https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=34e431b0ae398fc54ea69ff85ec700722c9da773
+	- https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=34e431b0ae398fc54ea69ff85ec700722c9da773 //nolint:lll
 	- https://github.com/mmalecki/procps/blob/master/proc/sysinfo.c
 
 	in the second link we see that even procps is parsing /proc/meminfo to get the RAM information

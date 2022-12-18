@@ -13,31 +13,35 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-func TestUptime(t *testing.T) {
+// getUptimeControlValue from /proc/uptime to compare against our syscall value.
+func getUptimeControlValue(t *testing.T) time.Duration {
 	f, err := os.Open("/proc/uptime")
 	if err != nil {
 		t.Fatalf("failed to open /proc/uptime with error: %v", err)
 	}
 	buf, err := io.ReadAll(f)
 
-	// calling Uptime() here to try and get the same time as the file
-
 	if err != nil {
 		t.Fatalf("failed to read /proc/uptime with error: %v", err)
 	}
+
 	t.Logf("read %d bytes from /proc/uptime: %s", len(buf), buf)
 
 	controlSeconds, err := strconv.ParseInt(string(buf[:strings.IndexByte(string(buf), '.')]), 10, 64)
 	if err != nil {
 		t.Fatalf("failed to parse /proc/uptime with error: %e", err)
 	}
-	if controlSeconds < 1 {
-		t.Fatalf("failed to parse /proc/uptime")
-	}
-	uptimeCtrl := time.Duration(controlSeconds) * time.Second
-	t.Logf("control uptime: %v", uptimeCtrl)
 
-	// ---
+	if controlSeconds < 1 {
+		t.Fatalf("failed to parse /proc/uptime (zero value)")
+	}
+
+	return time.Duration(controlSeconds) * time.Second
+}
+
+func TestUptime(t *testing.T) {
+	uptimeCtrl := getUptimeControlValue(t)
+	t.Logf("control uptime: %v", uptimeCtrl)
 
 	uptime, err := Uptime()
 	if err != nil {
@@ -69,12 +73,12 @@ func TestUptime(t *testing.T) {
 	}
 
 	if !matching {
-		t.Fatalf("uptime does not match control uptime: %v != %v", uptime, uptimeCtrl)
+		t.Errorf("uptime does not match control uptime: %v != %v", uptime, uptimeCtrl)
 	}
-
 }
 
 func TestSysinfo(t *testing.T) {
+	t.Parallel()
 	si, err := Sysinfo()
 	if err != nil {
 		t.Fatalf("failed to get sysinfo with error: %e", err)

@@ -8,7 +8,7 @@ import (
 	ipa "inet.af/netaddr"
 )
 
-var testdata29 string = `
+var testdata29 = `
 192.168.69.240
 192.168.69.241
 192.168.69.242
@@ -75,7 +75,7 @@ func TestIterateNetRange(t *testing.T) {
 		},
 		{
 			name: "evenboguser",
-			args: args{ips: int(5)},
+			args: args{ips: 5},
 			want: nil,
 		},
 	}
