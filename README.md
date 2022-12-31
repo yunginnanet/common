@@ -12,8 +12,6 @@ Welcome to things. Here are some of the aforementioned:
 
 * [entropy](https://pkg.go.dev/git.tcp.direct/kayos/common/entropy)
 
-* [network](https://pkg.go.dev/git.tcp.direct/kayos/common/network)
-
 ## base
 
 `import "git.tcp.direct/kayos/common"`
