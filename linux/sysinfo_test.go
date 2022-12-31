@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 // getUptimeControlValue from /proc/uptime to compare against our syscall value.
@@ -87,5 +85,5 @@ func TestSysinfo(t *testing.T) {
 		t.Fatalf("failed to get sysinfo (nil)")
 	}
 
-	t.Logf("sysinfo: %s", spew.Sdump(si))
+	t.Logf("sysinfo: %v", si)
 }
