@@ -496,4 +496,13 @@ func TestBufferFactory(t *testing.T) {
 			t.Fatalf("The slice is not nil")
 		}
 	})
+	t.Run("NewSizedBufferFactory", func(t *testing.T) {
+		t.Parallel()
+		sized := NewSizedBufferFactory(4)
+		buf := sized.Get()
+		defer sized.MustPut(buf)
+		if buf.Cap() != 4 {
+			t.Errorf("Expected sized buffer from fresh factory to be cap == 4, got: %d", buf.Cap())
+		}
+	})
 }

@@ -18,6 +18,14 @@ func NewBufferFactory() BufferFactory {
 	}
 }
 
+func NewSizedBufferFactory(size int) BufferFactory {
+	return BufferFactory{
+		pool: &sync.Pool{
+			New: func() any { return bytes.NewBuffer(make([]byte, size)) },
+		},
+	}
+}
+
 func (cf BufferFactory) Put(buf *Buffer) error {
 	var err = ErrBufferReturned
 	buf.o.Do(func() {
