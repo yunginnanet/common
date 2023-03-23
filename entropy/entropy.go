@@ -93,7 +93,7 @@ const charsetWithUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12
 func RandStr(size int) string {
 	buf := make([]byte, size)
 	for i := 0; i != size; i++ {
-		buf[i] = charset[uint32(RNG(36))%uint32(len(charset))]
+		buf[i] = charset[GetOptimizedRand().Uint32()%uint32(len(charset))]
 	}
 	return string(buf)
 }
