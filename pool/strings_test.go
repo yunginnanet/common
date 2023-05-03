@@ -17,6 +17,7 @@ func assertPanic(t *testing.T, f func()) {
 }
 
 func TestStringFactoryPanic(t *testing.T) {
+	t.Parallel()
 	sf := NewStringFactory()
 	t.Run("StringsMustWrite", func(t *testing.T) {
 		buf := sf.Get()
@@ -29,19 +30,21 @@ func TestStringFactoryPanic(t *testing.T) {
 		}
 	})
 	t.Run("StringsMustWritePanic", func(t *testing.T) {
+		t.Parallel()
 		var badString *string = nil
 		buf := sf.Get()
 		assertPanic(t, func() {
 			buf.MustWriteString(*badString)
 		})
-		assertPanic(t, func() {
-			buf.MustWriteString("")
-		})
+		/*		assertPanic(t, func() {
+				buf.MustWriteString("")
+			})*/
 		if err := sf.Put(buf); err != nil {
 			t.Fatalf("The buffer was not returned: %v", err)
 		}
 	})
 	t.Run("StringsMustString", func(t *testing.T) {
+		t.Parallel()
 		buf := sf.Get()
 		buf.MustWriteString("hello world")
 		if buf.MustString() != "hello world" {
@@ -53,6 +56,7 @@ func TestStringFactoryPanic(t *testing.T) {
 		})
 	})
 	t.Run("StringsMust", func(t *testing.T) {
+		t.Parallel()
 		buf := sf.Get()
 		buf.MustReset()
 		_ = buf.MustLen()
@@ -80,6 +84,7 @@ func TestStringFactoryPanic(t *testing.T) {
 }
 
 func TestStringFactory(t *testing.T) {
+	t.Parallel()
 	s := NewStringFactory()
 	t.Run("StringPoolHelloWorld", func(t *testing.T) {
 		t.Parallel()
@@ -213,5 +218,30 @@ func TestStringFactory(t *testing.T) {
 		if got.Len() != 0 {
 			t.Fatalf("should not be able to write to a returned buffer")
 		}
+	})
+	t.Run("StringFactoryMustNotPanicOnEmptyString", func(t *testing.T) {
+		t.Parallel()
+		got := s.Get()
+		n, err := got.WriteString("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 0 {
+			t.Fatalf("expected 0, got %d", n)
+		}
+		if str := got.String(); str != "" {
+			t.Fatalf("expected empty string, got %s", str)
+		}
+		if err := s.Put(got); err != nil {
+			t.Fatal(err)
+		}
+		got = s.Get()
+		defer func() {
+			if r := recover(); r != nil {
+				t.Fatalf("unexpected panic: %v", r)
+			}
+		}()
+		got.MustWriteString("")
+		s.MustPut(got)
 	})
 }

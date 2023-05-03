@@ -79,6 +79,9 @@ func (s String) MustReset() {
 }
 
 func (s String) WriteString(str string) (int, error) {
+	if str == "" {
+		return 0, nil
+	}
 	if s.Builder == nil {
 		return 0, ErrBufferReturned
 	}
@@ -87,12 +90,15 @@ func (s String) WriteString(str string) (int, error) {
 
 // MustWriteString means Must Write String, like WriteString but will panic on error.
 func (s String) MustWriteString(str string) {
+	if str == "" {
+		return
+	}
 	if s.Builder == nil {
 		panic(ErrBufferReturned)
 	}
-	if str == "" {
+	/*	if str == "" {
 		panic("nil string")
-	}
+	}*/
 	_, _ = s.Builder.WriteString(str)
 }
 
@@ -100,21 +106,21 @@ func (s String) Write(p []byte) (int, error) {
 	if s.Builder == nil {
 		return 0, ErrBufferReturned
 	}
-	return s.Builder.Write(p)
+	return s.Builder.Write(p) //nolint:wrapcheck
 }
 
 func (s String) WriteRune(r rune) (int, error) {
 	if s.Builder == nil {
 		return 0, ErrBufferReturned
 	}
-	return s.Builder.WriteRune(r)
+	return s.Builder.WriteRune(r) //nolint:wrapcheck
 }
 
 func (s String) WriteByte(c byte) error {
 	if s.Builder == nil {
 		return ErrBufferReturned
 	}
-	return s.Builder.WriteByte(c)
+	return s.Builder.WriteByte(c) //nolint:wrapcheck
 }
 
 func (s String) Len() int {
