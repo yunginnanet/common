@@ -6,12 +6,13 @@ import (
 	"crypto/sha1" //nolint:gosec
 	"crypto/sha256"
 	"crypto/sha512"
+	"errors"
+	"fmt"
 	"hash"
 	"io"
 	"os"
 	"sync"
 
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -97,7 +98,7 @@ func BlakeFileChecksum(path string) (buf []byte, err error) {
 
 	defer func() {
 		if closeErr := f.Close(); err != nil {
-			err = errors.Wrapf(err, "failed to close file: %s", closeErr)
+			err = fmt.Errorf("failed to close file during BlakeFileChecksum: %w", closeErr)
 		}
 	}()
 
