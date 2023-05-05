@@ -430,9 +430,9 @@ func TestThePlanet(t *testing.T) {
 				t.Errorf("Push(%d) = %v, want nil", i, err)
 			}
 		}
-		for i := 4; i > 0; i-- {
-			if pl.Pop() != i {
-				t.Errorf("Pop() = %d, want %d", pl.Pop(), i)
+		for i := 1; i < 5; i++ {
+			if got := pl.Pop(); got != i {
+				t.Errorf("Pop() = %d, want %d", got, i)
 			}
 		}
 		for i := 1; i < 5; i++ {
@@ -450,7 +450,7 @@ func TestThePlanet(t *testing.T) {
 			wg.Add(1)
 			go func(n int) {
 				if cerr := cl.Push(n); cerr != nil {
-					t.Errorf("Push(%d) err = %v, want nil", i, cerr)
+					t.Errorf("Push(%d) err = %v, want nil", n, cerr)
 				}
 				wg.Done()
 			}(i)

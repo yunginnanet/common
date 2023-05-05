@@ -217,7 +217,7 @@ func (ll *LockingList) Pop() any {
 		return nil
 	}
 	_ = ll.Lock()
-	e := ll.l.Back()
+	e := ll.l.Front()
 	ll.l.Remove(e)
 	ll.Unlock()
 	return e.Value
