@@ -2,6 +2,7 @@ package pool
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"sync"
 )
@@ -52,8 +53,8 @@ func (cf BufferFactory) MustPut(buf *Buffer) {
 // Get returns a buffer from the pool.
 func (cf BufferFactory) Get() *Buffer {
 	return &Buffer{
-		cf.pool.Get().(*bytes.Buffer),
-		&sync.Once{},
+		Buffer: cf.pool.Get().(*bytes.Buffer),
+		o:      &sync.Once{},
 	}
 }
 
@@ -61,6 +62,14 @@ func (cf BufferFactory) Get() *Buffer {
 type Buffer struct {
 	*bytes.Buffer
 	o *sync.Once
+	p *BufferFactory
+}
+
+// WithParent sets the parent of the buffer. This is useful for chaining factories, and for facilitating
+// in-line buffer return with functions like Buffer.Close(). Be mindful, however, that this adds a bit of overhead.
+func (c Buffer) WithParent(p *BufferFactory) *Buffer {
+	c.p = p
+	return &c
 }
 
 // Bytes returns a slice of length b.Len() holding the unread portion of the buffer.
@@ -223,7 +232,10 @@ func (c Buffer) WriteString(str string) (int, error) {
 	return c.Buffer.WriteString(str)
 }
 
-// Grow grows the buffer's capacity, if necessary, to guarantee space for another n bytes. After Grow(n), at least n bytes can be written to the buffer without another allocation. If n is negative, Grow will panic. If the buffer can't grow it will panic with ErrTooLarge.
+// Grow grows the buffer's capacity, if necessary, to guarantee space for another n bytes.
+// After Grow(n), at least n bytes can be written to the buffer without another allocation.
+// If n is negative, Grow will panic. If the buffer can't grow it will panic with ErrTooLarge.
+//
 // If the buffer has already been returned to the pool, Grow will return ErrBufferReturned.
 //
 // *This is from the bytes.Buffer docs.*
@@ -409,4 +421,17 @@ func (c Buffer) Next(n int) []byte {
 		return nil
 	}
 	return c.Buffer.Next(n)
+}
+
+// Close implements io.Closer. It returns the buffer to the pool. This
+func (c Buffer) Close() error {
+	if c.Buffer == nil {
+		return errors.New("buffer already returned to pool")
+	}
+	if c.p == nil {
+		return errors.New(
+			"buffer does not know it's parent pool and therefore cannot return itself, use Buffer.WithParent to set the parent pool",
+		)
+	}
+	return c.p.Put(&c)
 }
