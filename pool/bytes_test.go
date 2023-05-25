@@ -532,8 +532,14 @@ func TestBufferFactory(t *testing.T) {
 		buf.MustWrite([]byte("hello"))
 		buf.MustWrite([]byte("world"))
 		buf.MustWrite([]byte("!"))
+		if buf.IsClosed() {
+			t.Fatalf("The buffer is closed before closing")
+		}
 		if err := buf.Close(); err == nil {
 			t.Fatal("The error is nil after closing the buffer with no parent")
+		}
+		if buf.IsClosed() {
+			t.Fatalf("The buffer is closed after failing to close")
 		}
 		if buf.String() != "helloworld!" {
 			t.Fatalf("The string is not 'helloworld!' after unsuccessful close: %v", buf.String())
@@ -541,6 +547,12 @@ func TestBufferFactory(t *testing.T) {
 		buf = buf.WithParent(&bf)
 		if err := buf.Close(); err != nil {
 			t.Fatal(err)
+		}
+		if !buf.IsClosed() {
+			t.Fatalf("The buffer is not closed after closing")
+		}
+		if err := buf.Close(); err == nil {
+			t.Fatal("The error is nil after closing an already closed buffer")
 		}
 	})
 	t.Run("BufferCannotClose", func(t *testing.T) {

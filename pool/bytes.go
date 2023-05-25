@@ -61,14 +61,16 @@ func (cf BufferFactory) Get() *Buffer {
 // Buffer is a wrapper around bytes.Buffer that can only be returned to a pool once.
 type Buffer struct {
 	*bytes.Buffer
-	o *sync.Once
-	p *BufferFactory
+	o  *sync.Once
+	co *sync.Once
+	p  *BufferFactory
 }
 
 // WithParent sets the parent of the buffer. This is useful for chaining factories, and for facilitating
 // in-line buffer return with functions like Buffer.Close(). Be mindful, however, that this adds a bit of overhead.
 func (c Buffer) WithParent(p *BufferFactory) *Buffer {
 	c.p = p
+	c.co = &sync.Once{}
 	return &c
 }
 
@@ -423,6 +425,18 @@ func (c Buffer) Next(n int) []byte {
 	return c.Buffer.Next(n)
 }
 
+// IsClosed returns true if the buffer has been returned to the pool.
+func (c Buffer) IsClosed() bool {
+	var closed = true
+	if c.co == nil {
+		c.co = &sync.Once{}
+	}
+	c.co.Do(func() {
+		closed = false
+	})
+	return closed
+}
+
 // Close implements io.Closer. It returns the buffer to the pool. This
 func (c Buffer) Close() error {
 	if c.Buffer == nil {
@@ -430,8 +444,12 @@ func (c Buffer) Close() error {
 	}
 	if c.p == nil {
 		return errors.New(
-			"buffer does not know it's parent pool and therefore cannot return itself, use Buffer.WithParent to set the parent pool",
+			"buffer does not know it's parent pool and therefore cannot return itself, use Buffer.WithParent",
 		)
 	}
-	return c.p.Put(&c)
+	var err = ErrBufferReturned
+	c.co.Do(func() {
+		err = c.p.Put(&c)
+	})
+	return err
 }
