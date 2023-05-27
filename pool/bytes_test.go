@@ -630,13 +630,6 @@ func TestBufferFactory(t *testing.T) {
 			}()
 		}
 		for i := 0; i < 100; i++ {
-			go func() {
-				if clsd := buf.SafeIsClosed(); clsd {
-					t.Errorf("The buffer is closed somehow?")
-				}
-			}()
-		}
-		for i := 0; i < 100; i++ {
 			if _, err := buf.SafeRead([]byte("yeet")); err != nil {
 				t.Errorf("Error reading from buffer: %v", err)
 			}
@@ -768,9 +761,7 @@ func TestBufferFactory(t *testing.T) {
 					t.Fatal("The panic is nil")
 				}
 			}()
-			if clsd := buf.SafeIsClosed(); clsd {
-				t.Errorf("The buffer is closed somehow?")
-			}
+			_ = buf.SafeNext(1)
 		}()
 		func() {
 			defer func() {
@@ -866,6 +857,9 @@ func TestBufferFactory(t *testing.T) {
 		}
 		if str := buf2.SafeString(); str != "" {
 			t.Fatalf("The string is not empty: %v", str)
+		}
+		if err := buf2.SafeClose(); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
 		}
 	})
 }

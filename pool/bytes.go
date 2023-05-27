@@ -684,19 +684,6 @@ func (c *Buffer) IsClosed() bool {
 	return c.Buffer == nil || c.co == nil
 }
 
-// SafeIsClosed is the same as IsClosed but holds a write lock on the buffer while reading.
-func (c *Buffer) SafeIsClosed() bool {
-	if !c.hasmu() {
-		panic(ErrBufferHasNoMutex)
-	}
-	if !c.mu.TryLock() {
-		return false
-	}
-	closed := c.IsClosed()
-	c.mu.Unlock()
-	return closed
-}
-
 // Close implements io.Closer. It returns the buffer to the pool. This
 func (c *Buffer) Close() error {
 	if c.Buffer == nil {
