@@ -9,4 +9,8 @@ require (
 
 require golang.org/x/sys v0.11.0 // indirect
 
-retract v0.0.0-20220210125455-40e3d2190a52
+retract (
+	v0.0.0-20220210125455-40e3d2190a52
+	v0.9.0 // premature
+	v0.9.1 // premature (race condition)
+)
