@@ -52,6 +52,7 @@ func AcquireRand() *rand.Rand {
 
 func ReleaseRand(r *rand.Rand) {
 	lolXD.Put(r)
+	r = nil
 }
 
 // RandomStrChoice returns a random item from an input slice of strings.
