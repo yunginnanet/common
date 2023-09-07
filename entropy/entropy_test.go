@@ -40,6 +40,33 @@ func Test_RNG(t *testing.T) {
 		check(t, RNG(123454321), RNG(123454321))
 		check(t, RNGUint32(), RNGUint32())
 	}
+
+	// for coverage
+	if GetOptimizedRand().Intn(55555) == GetOptimizedRand().Intn(55555) {
+		t.Errorf("GetOptimizedRand(55555) returned the same value twice!")
+	}
+	if GetSharedRand().Intn(55555) == GetSharedRand().Intn(55555) {
+		t.Errorf("GetSharedRand(55555) returned the same value twice!")
+	}
+	r := AcquireRand()
+	one := r.Intn(55555)
+	two := r.Intn(55555)
+	if one == two {
+		t.Errorf("AcquireRand() returned the same value twice!")
+	}
+	ReleaseRand(r)
+	r = AcquireRand()
+	one1 := r.Intn(55555)
+	two1 := r.Intn(55555)
+	if one1 == two1 {
+		t.Errorf("AcquireRand() returned the same value twice!")
+	}
+	if one == one1 {
+		t.Errorf("AcquireRand()[2] returned the same value twice!")
+	}
+	if two == two1 {
+		t.Errorf("AcquireRand()[2] returned the same value twice!")
+	}
 }
 
 func Test_OneInA(t *testing.T) {
@@ -139,9 +166,9 @@ func Test_RNGUint32(t *testing.T) {
 
 func Benchmark_RandStr(b *testing.B) {
 	toTest := []int{5, 25, 55, 500, 55555}
-	for _, n := range toTest {
+	for n := range toTest {
 		for i := 1; i != 5; i++ {
-			b.Run(fmt.Sprintf("%dchar/run%d", n, i), func(b *testing.B) {
+			b.Run(fmt.Sprintf("lenSeries%d/run%d", n, i), func(b *testing.B) {
 				b.ReportAllocs()
 				b.ResetTimer()
 				for tn := 0; tn != b.N; tn++ {
