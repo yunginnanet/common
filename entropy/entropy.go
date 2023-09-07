@@ -128,26 +128,51 @@ func RandSleepMS(n int) {
 const charset = "abcdefghijklmnopqrstuvwxyz1234567890"
 const charsetWithUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
 
-var strBufs = pool.NewStringFactory()
+var strBufs = pool.NewBufferFactory()
 
 // RandStr generates a random alphanumeric string with a max length of size.
 // Alpha charset used is a-z all lowercase.
 func RandStr(size int) string {
-	return randStr(charset, size)
+	return randStr(false, size)
 }
 
 // RandStrWithUpper generates a random alphanumeric string with a max length of size.
 // Alpha charset used is a-Z mixed case.
 func RandStrWithUpper(size int) string {
-	return randStr(charsetWithUpper, size)
+	return randStr(true, size)
 }
 
-func randStr(chars string, size int) string {
+/*
+randStr is an overoptimized (read: dummy fast) random string generator.
+
+	using byte buffers gives us a solid 2 alloc/op indefinitely.
+	using string builders gives us a linear increase in alloc/op, up to 22 alloc/op at 55,555 characters.
+
+
+	at 55,555 characters, we are at:
+
+	~57,000 bytes per op with string builders
+	   vs
+	~210,000 bytes per op with string builders.
+
+
+	this is felt significantly at ranges as low as 500 chars, where we get:
+
+	8 alloc/op and >1,000 bytes/op with string builders
+	  vs
+	2 alloc/op and ~500 bytes/op with byte buffers.
+*/
+func randStr(upper bool, size int) string {
 	buf := strBufs.Get()
 	r := lolXD.Get()
 	for i := 0; i != size; i++ {
 		ui32 := int(r.Uint32())
-		_, _ = buf.WriteRune(rune(chars[ui32%len(chars)]))
+		switch upper {
+		case true:
+			_ = buf.WriteByte(charsetWithUpper[ui32%len(charsetWithUpper)])
+		case false:
+			_ = buf.WriteByte(charset[ui32%len(charset)])
+		}
 	}
 	lolXD.Put(r)
 	s := buf.String()
