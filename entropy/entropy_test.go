@@ -160,7 +160,9 @@ func Test_RNGUint32(t *testing.T) {
 	t.Parallel()
 	// start globals fresh, just for coverage.
 	setSharedRand()
+	hardLocc.Lock()
 	getSharedRand = &sync.Once{}
+	hardLocc.Unlock()
 	RNGUint32()
 }
 
