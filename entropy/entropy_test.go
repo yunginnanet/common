@@ -1,6 +1,7 @@
 package entropy
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"testing"
@@ -136,62 +137,17 @@ func Test_RNGUint32(t *testing.T) {
 	RNGUint32()
 }
 
-func Benchmark_RandStr5(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStr(5)
-	}
-}
-
-func Benchmark_RandStr25(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStr(25)
-	}
-}
-
-func Benchmark_RandStr55(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStr(55)
-	}
-}
-
-func Benchmark_RandStr500(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStr(500)
-	}
-}
-
-func Benchmark_RandStr55555(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStr(55555)
-	}
-}
-
-func Benchmark_RandStrWithUpper5(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStrWithUpper(5)
-	}
-}
-
-func Benchmark_RandStrWithUpper25(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStrWithUpper(25)
-	}
-}
-
-func Benchmark_RandStrWithUpper55(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStrWithUpper(55)
-	}
-}
-
-func Benchmark_RandStrWithUpper500(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStrWithUpper(500)
-	}
-}
-
-func Benchmark_RandStrWithUpper55555(b *testing.B) {
-	for n := 0; n != b.N; n++ {
-		RandStrWithUpper(55555)
+func Benchmark_RandStr(b *testing.B) {
+	toTest := []int{5, 25, 55, 500, 55555}
+	for _, n := range toTest {
+		for i := 1; i != 5; i++ {
+			b.Run(fmt.Sprintf("%dchar/run%d", n, i), func(b *testing.B) {
+				b.ReportAllocs()
+				b.ResetTimer()
+				for tn := 0; tn != b.N; tn++ {
+					RandStr(n)
+				}
+			})
+		}
 	}
 }
