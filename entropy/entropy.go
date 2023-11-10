@@ -152,7 +152,7 @@ randStr is an overoptimized (read: dummy fast) random string generator.
 
 	at 55,555 characters, we are at:
 
-	~57,000 bytes per op with string builders
+	~57,000 bytes per op with byte builders
 	   vs
 	~210,000 bytes per op with string builders.
 

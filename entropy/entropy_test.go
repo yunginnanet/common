@@ -168,13 +168,13 @@ func Test_RNGUint32(t *testing.T) {
 
 func Benchmark_RandStr(b *testing.B) {
 	toTest := []int{5, 25, 55, 500, 55555}
-	for n := range toTest {
+	for _, ln := range toTest {
 		for i := 1; i != 5; i++ {
-			b.Run(fmt.Sprintf("lenSeries%d/run%d", n, i), func(b *testing.B) {
+			b.Run(fmt.Sprintf("len%d/run%d", ln, i), func(b *testing.B) {
 				b.ReportAllocs()
 				b.ResetTimer()
 				for tn := 0; tn != b.N; tn++ {
-					RandStr(n)
+					RandStr(ln)
 				}
 			})
 		}
