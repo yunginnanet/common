@@ -22,28 +22,29 @@ const (
 
 var kayosByteSlice = []byte{107, 97, 121, 111, 115, 10}
 
+var (
+	ogsha1, _    = base64.StdEncoding.DecodeString(kayosSHA1)
+	ogsha256, _  = base64.StdEncoding.DecodeString(kayosSHA256)
+	ogsha512, _  = base64.StdEncoding.DecodeString(kayosSHA512)
+	ogmd5, _     = base64.StdEncoding.DecodeString(kayosMD5)
+	ogBlake2b, _ = base64.StdEncoding.DecodeString(kayosBlake2b)
+	ogCRC32, _   = base64.StdEncoding.DecodeString(kayosCRC32)
+	valids       = map[Type][]byte{
+		TypeSHA1:    ogsha1,
+		TypeSHA256:  ogsha256,
+		TypeSHA512:  ogsha512,
+		TypeMD5:     ogmd5,
+		TypeCRC32:   ogCRC32,
+		TypeBlake2b: ogBlake2b,
+	}
+)
+
 func TestSum(t *testing.T) {
 	t.Parallel()
 	if Sum(TypeNull, []byte("yeet")) != nil {
 		t.Fatal("Sum(TypeNull, []byte(\"yeet\")) should have returned nil")
 	}
 
-	var (
-		ogsha1, _    = base64.StdEncoding.DecodeString(kayosSHA1)
-		ogsha256, _  = base64.StdEncoding.DecodeString(kayosSHA256)
-		ogsha512, _  = base64.StdEncoding.DecodeString(kayosSHA512)
-		ogmd5, _     = base64.StdEncoding.DecodeString(kayosMD5)
-		ogBlake2b, _ = base64.StdEncoding.DecodeString(kayosBlake2b)
-		ogCRC32, _   = base64.StdEncoding.DecodeString(kayosCRC32)
-		valids       = map[Type][]byte{
-			TypeSHA1:    ogsha1,
-			TypeSHA256:  ogsha256,
-			TypeSHA512:  ogsha512,
-			TypeMD5:     ogmd5,
-			TypeCRC32:   ogCRC32,
-			TypeBlake2b: ogBlake2b,
-		}
-	)
 	for k, v := range valids {
 		typeToTest := k
 		valueToTest := v
@@ -99,7 +100,7 @@ func TestSum(t *testing.T) {
 var benchData = []byte(entropy.RandStrWithUpper(5000))
 
 func BenchmarkSum(b *testing.B) {
-	for _, sumType := range []Type{TypeSHA1, TypeSHA256, TypeSHA512, TypeBlake2b, TypeMD5} {
+	for sumType := range valids {
 		b.Run(sumType.String(), func(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
