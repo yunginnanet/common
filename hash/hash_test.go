@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -12,30 +13,36 @@ import (
 )
 
 const (
-	kayosBlake2b = "Kr+6ONDx+cq/WvhHpQE/4LVuJYi9QHz1TztHNTWwa9KJWqHxfTNLKF3YxrcLptA3wO0KHm83Lq7gpBWgCQzPag=="
-	kayosMD5     = "aoNjwileNitB208vOwpIow=="
-	kayosSHA1    = "M23ElC0sQYAK+MaMZVmza2L8mss="
-	kayosSHA256  = "BagY0TmoGR3O7t80BGm4K6UHPlqEg6HJirwQmhrPK4U="
-	kayosSHA512  = "xiuo2na76acrWXCTTR++O1pPZabOhyj8nbfb5Go3e1pEq9VJYIsOioTXalf2GCuERmFecWkmaL5QI8mIXXWpNA=="
-	kayosCRC32   = "xtig5w=="
+	kayosBlake2b   = "Kr+6ONDx+cq/WvhHpQE/4LVuJYi9QHz1TztHNTWwa9KJWqHxfTNLKF3YxrcLptA3wO0KHm83Lq7gpBWgCQzPag=="
+	kayosMD5       = "aoNjwileNitB208vOwpIow=="
+	kayosSHA1      = "M23ElC0sQYAK+MaMZVmza2L8mss="
+	kayosSHA256    = "BagY0TmoGR3O7t80BGm4K6UHPlqEg6HJirwQmhrPK4U="
+	kayosSHA512    = "xiuo2na76acrWXCTTR++O1pPZabOhyj8nbfb5Go3e1pEq9VJYIsOioTXalf2GCuERmFecWkmaL5QI8mIXXWpNA=="
+	kayosCRC32     = "xtig5w=="
+	kayosCRC64ISO  = "YVx8IpQawAA="
+	kayosCRC64ECMA = "Nn5+vneo4j4="
 )
 
 var kayosByteSlice = []byte{107, 97, 121, 111, 115, 10}
 
 var (
-	ogsha1, _    = base64.StdEncoding.DecodeString(kayosSHA1)
-	ogsha256, _  = base64.StdEncoding.DecodeString(kayosSHA256)
-	ogsha512, _  = base64.StdEncoding.DecodeString(kayosSHA512)
-	ogmd5, _     = base64.StdEncoding.DecodeString(kayosMD5)
-	ogBlake2b, _ = base64.StdEncoding.DecodeString(kayosBlake2b)
-	ogCRC32, _   = base64.StdEncoding.DecodeString(kayosCRC32)
-	valids       = map[Type][]byte{
-		TypeSHA1:    ogsha1,
-		TypeSHA256:  ogsha256,
-		TypeSHA512:  ogsha512,
-		TypeMD5:     ogmd5,
-		TypeCRC32:   ogCRC32,
-		TypeBlake2b: ogBlake2b,
+	ogsha1, _      = base64.StdEncoding.DecodeString(kayosSHA1)
+	ogsha256, _    = base64.StdEncoding.DecodeString(kayosSHA256)
+	ogsha512, _    = base64.StdEncoding.DecodeString(kayosSHA512)
+	ogmd5, _       = base64.StdEncoding.DecodeString(kayosMD5)
+	ogBlake2b, _   = base64.StdEncoding.DecodeString(kayosBlake2b)
+	ogCRC32, _     = base64.StdEncoding.DecodeString(kayosCRC32)
+	ogCRC64ISO, _  = base64.StdEncoding.DecodeString(kayosCRC64ISO)
+	ogCRC64ECMA, _ = base64.StdEncoding.DecodeString(kayosCRC64ECMA)
+	valids         = map[Type][]byte{
+		TypeSHA1:      ogsha1,
+		TypeSHA256:    ogsha256,
+		TypeSHA512:    ogsha512,
+		TypeMD5:       ogmd5,
+		TypeCRC32:     ogCRC32,
+		TypeCRC64ISO:  ogCRC64ISO,
+		TypeCRC64ECMA: ogCRC64ECMA,
+		TypeBlake2b:   ogBlake2b,
 	}
 )
 
@@ -51,7 +58,9 @@ func TestSum(t *testing.T) {
 		t.Run(typeToTest.String()+"/string_check", func(t *testing.T) {
 			t.Parallel()
 			if !strings.EqualFold(typeToTest.String(), StringToType(typeToTest.String()).String()) {
-				t.Errorf("[FAIL] %s: wanted %s, got %s", typeToTest.String(), typeToTest.String(), StringToType(typeToTest.String()).String())
+				t.Errorf("[FAIL] %s: wanted %s, got %s",
+					typeToTest.String(), typeToTest.String(), StringToType(typeToTest.String()).String(),
+				)
 			}
 		})
 		t.Run(typeToTest.String()+"/static_check", func(t *testing.T) {
@@ -97,17 +106,34 @@ func TestSum(t *testing.T) {
 	})
 }
 
-var benchData = []byte(entropy.RandStrWithUpper(5000))
-
 func BenchmarkSum(b *testing.B) {
-	for sumType := range valids {
-		b.Run(sumType.String(), func(b *testing.B) {
-			b.ReportAllocs()
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				b.SetBytes(int64(len(benchData)))
-				Sum(sumType, benchData)
+	runIt := func(length int) {
+		dat := []byte(entropy.RandStrWithUpper(length))
+		b.Run(strconv.Itoa(length)+"char", func(b *testing.B) {
+			for sumType := range valids {
+				b.Run(sumType.String(), func(b *testing.B) {
+					b.ReportAllocs()
+					b.ResetTimer()
+					for i := 0; i < b.N; i++ {
+						b.SetBytes(int64(len(dat)))
+						Sum(sumType, dat)
+					}
+				})
 			}
 		})
+	}
+	for i := 0; i != 5; i++ {
+		mult := 5
+		if i == 0 {
+			runIt(50)
+			continue
+		}
+		if i > 1 {
+			mult = (mult * 10) * i
+		}
+		if i > 3 {
+			mult = (mult * 100) * i
+		}
+		runIt(i * mult)
 	}
 }
