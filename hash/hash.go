@@ -5,6 +5,7 @@ import (
 	"crypto/sha1" //nolint:gosec
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash"
@@ -106,46 +107,102 @@ var (
 			return h
 		},
 	}
+	bufPool = &sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 0, 40)
+		},
+	}
 )
 
-func Sum(ht Type, b []byte) []byte {
-	var h hash.Hash
+func getHasher(ht Type) hash.Hash {
 	switch ht {
 	case TypeBlake2b:
-		h = blake2bPool.Get().(hash.Hash)
-		defer blake2bPool.Put(h)
+		return blake2bPool.Get().(hash.Hash)
 	case TypeSHA1:
-		h = sha1Pool.Get().(hash.Hash)
-		defer sha1Pool.Put(h)
+		return sha1Pool.Get().(hash.Hash)
 	case TypeSHA256:
-		h = sha256Pool.Get().(hash.Hash)
-		defer sha256Pool.Put(h)
+		return sha256Pool.Get().(hash.Hash)
 	case TypeSHA512:
-		h = sha512Pool.Get().(hash.Hash)
-		defer sha512Pool.Put(h)
+		return sha512Pool.Get().(hash.Hash)
 	case TypeMD5:
-		h = md5Pool.Get().(hash.Hash)
-		defer md5Pool.Put(h)
+		return md5Pool.Get().(hash.Hash)
 	case TypeCRC32:
-		h = crc32Pool.Get().(hash.Hash)
-		defer crc32Pool.Put(h)
+		return crc32Pool.Get().(hash.Hash)
 	case TypeCRC64ISO:
-		h = crc64ISOPool.Get().(hash.Hash)
-		defer crc64ISOPool.Put(h)
+		return crc64ISOPool.Get().(hash.Hash)
 	case TypeCRC64ECMA:
-		h = crc64ECMAPool.Get().(hash.Hash)
-		defer crc64ECMAPool.Put(h)
-
+		return crc64ECMAPool.Get().(hash.Hash)
 	default:
 		return nil
 	}
-	h.Write(b)
-	sum := h.Sum(nil)
+}
+
+func putHasher(ht Type, h hash.Hash) {
 	h.Reset()
+	switch ht {
+	case TypeBlake2b:
+		blake2bPool.Put(h)
+	case TypeSHA1:
+		sha1Pool.Put(h)
+	case TypeSHA256:
+		sha256Pool.Put(h)
+	case TypeSHA512:
+		sha512Pool.Put(h)
+	case TypeMD5:
+		md5Pool.Put(h)
+	case TypeCRC32:
+		crc32Pool.Put(h)
+	case TypeCRC64ISO:
+		crc64ISOPool.Put(h)
+	case TypeCRC64ECMA:
+		crc64ECMAPool.Put(h)
+	default:
+	}
+}
+
+func Sum(ht Type, b []byte) []byte {
+	h := getHasher(ht)
+	h.Write(b)
+	b2 := bufPool.Get().([]byte)[0:0]
+	if cap(b2) < h.Size() {
+		b2 = append(b2, make([]byte, h.Size()-cap(b2))...)
+	}
+	sum := h.Sum(b2[:h.Size()])
+	putHasher(ht, h)
 	return sum
 }
 
+// RecycleChecksum will return the given byteslice previously allocated by [Sum] or [SumFile] to the buffer pool.
+// This is useful to reduce memory allocations when you are done with the byte slice,
+// but you MUST NOT reference the byte slice after calling this function.
+//
+// These bytes will be zeroed upon subsequent use, however;
+// you should not rely on this behavior if the checksum data is sensitive.
+// Either zero the data yourself or do not use this function.
+func RecycleChecksum(sum []byte) {
+	bufPool.Put(sum)
+}
+
+// SumHex will return the hex-encoded checksum string of the given byteslice.
+//
+// Note that this function makes a copy of the checksum data when it creates a hex-encoded string.
+// Afterwards, the checksum byte slice is returned to the buffer pool.
+//
+// In short: do not use this function for sensitive data. Just use [Sum] and encode the checksum yourself.
+// See notes on [RecycleChecksum] for more information.
+func SumHex(ht Type, b []byte) string {
+	s := Sum(ht, b)
+	oldLen := len(s)
+	needLen := hex.EncodedLen(len(s))
+	s = hex.AppendEncode(s, s)
+	str := string(s[oldLen : oldLen+needLen])
+	bufPool.Put(s)
+	return str
+}
+
 // SumFile will attempt to calculate a blake2b checksum of the given file path's contents.
+// It will read the entire file into memory and return the checksum.
+// If the file is empty, an error will be returned.
 func SumFile(ht Type, path string) (buf []byte, err error) {
 	var f *os.File
 	f, err = os.Open(path)
@@ -153,16 +210,35 @@ func SumFile(ht Type, path string) (buf []byte, err error) {
 		return nil, err
 	}
 
-	defer func() {
-		if closeErr := f.Close(); err != nil {
-			err = fmt.Errorf("failed to close file during BlakeFileChecksum: %w", closeErr)
-		}
-	}()
-
-	buf, _ = io.ReadAll(f)
-	if len(buf) == 0 {
-		return nil, errors.New("file is empty")
+	if closeErr := f.Close(); closeErr != nil {
+		err = fmt.Errorf("failed to close file during BlakeFileChecksum: %w", closeErr)
 	}
 
-	return Sum(ht, buf), nil
+	h := getHasher(ht)
+
+	buf = bufPool.Get().([]byte)
+
+	switch {
+	case len(buf) == cap(buf):
+	case cap(buf) >= 64 && cap(buf) > len(buf):
+		buf = buf[:cap(buf)]
+	case len(buf) < 64:
+		buf = append(buf, make([]byte, 1024)...)
+	default:
+	}
+
+	n, err := io.CopyBuffer(h, f, buf)
+	if err != nil {
+		putHasher(ht, h)
+		bufPool.Put(buf)
+		return nil, err
+	}
+	if n == 0 {
+		putHasher(ht, h)
+		bufPool.Put(buf)
+		return nil, errors.New("file is empty")
+	}
+	h.Sum(buf[:0])
+	putHasher(ht, h)
+	return buf, nil
 }
