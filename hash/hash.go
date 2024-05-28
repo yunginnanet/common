@@ -138,6 +138,9 @@ func getHasher(ht Type) hash.Hash {
 }
 
 func putHasher(ht Type, h hash.Hash) {
+	if h == nil {
+		return
+	}
 	h.Reset()
 	switch ht {
 	case TypeBlake2b:
@@ -162,12 +165,16 @@ func putHasher(ht Type, h hash.Hash) {
 
 func Sum(ht Type, b []byte) []byte {
 	h := getHasher(ht)
+	if h == nil {
+		return nil
+	}
 	h.Write(b)
-	b2 := bufPool.Get().([]byte)[0:0]
+	b2 := bufPool.Get().([]byte)
+	b2 = b2[:0]
 	if cap(b2) < h.Size() {
 		b2 = append(b2, make([]byte, h.Size()-cap(b2))...)
 	}
-	sum := h.Sum(b2[:h.Size()])
+	sum := h.Sum(b2[:0])
 	putHasher(ht, h)
 	return sum
 }
@@ -200,6 +207,16 @@ func SumHex(ht Type, b []byte) string {
 	return str
 }
 
+const ErrFileClosure = "failed to close i/o stream: %w"
+
+func closeIt(existing error, f io.Closer) error {
+	closeErr := f.Close()
+	if closeErr != nil {
+		closeErr = fmt.Errorf(ErrFileClosure, closeErr)
+	}
+	return errors.Join(existing, closeErr)
+}
+
 // SumFile will attempt to calculate a blake2b checksum of the given file path's contents.
 // It will read the entire file into memory and return the checksum.
 // If the file is empty, an error will be returned.
@@ -208,10 +225,6 @@ func SumFile(ht Type, path string) (buf []byte, err error) {
 	f, err = os.Open(path)
 	if err != nil {
 		return nil, err
-	}
-
-	if closeErr := f.Close(); closeErr != nil {
-		err = fmt.Errorf("failed to close file during BlakeFileChecksum: %w", closeErr)
 	}
 
 	h := getHasher(ht)
@@ -231,14 +244,16 @@ func SumFile(ht Type, path string) (buf []byte, err error) {
 	if err != nil {
 		putHasher(ht, h)
 		bufPool.Put(buf)
-		return nil, err
+		return nil, closeIt(err, f)
 	}
 	if n == 0 {
 		putHasher(ht, h)
 		bufPool.Put(buf)
-		return nil, errors.New("file is empty")
+		err = errors.New("file is empty")
+		return nil, closeIt(err, f)
 	}
 	h.Sum(buf[:0])
+	sz := h.Size()
 	putHasher(ht, h)
-	return buf, nil
+	return buf[:sz], closeIt(nil, f)
 }
