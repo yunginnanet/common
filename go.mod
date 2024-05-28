@@ -3,6 +3,7 @@ module git.tcp.direct/kayos/common
 go 1.19
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	golang.org/x/crypto v0.22.0
 	nullprogram.com/x/rng v1.1.0
 )
