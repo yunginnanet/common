@@ -253,8 +253,8 @@ func (f *checksumASM) loadInput() {
 	f.dataLen = f.ctx.Load(f.ctx.Param("data").Len(), f.ctx.GP64())
 	f.dataLenRegister = f.ctx.GP64()
 
-	f.ctx.DECQ(f.dataLenRegister)
-	f.ctx.MOVQ(f.dataLenRegister, f.GetRegister("aux64"))
+	f.ctx.DECQ(f.dataLen)
+	f.ctx.MOVQ(f.dataLen, f.GetRegister("aux64"))
 }
 
 func (f *checksumASM) registerInteropVars() (sum, r8, r9, r10, r11 reg.Register) {
