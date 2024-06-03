@@ -16,7 +16,7 @@ import (
 
 // FIXME
 //
-// //go:linkname avoCtx github.com/mmcloughlin/avo/build.ctx
+//go:linkname avoCtx github.com/mmcloughlin/avo/build.ctx
 var avoCtx *build.Context
 
 // ===================================================================================================================
