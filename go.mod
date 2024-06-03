@@ -1,6 +1,6 @@
 module git.tcp.direct/kayos/common
 
-go 1.19
+go 1.22
 
 require (
 	golang.org/x/crypto v0.22.0
