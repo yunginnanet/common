@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+type othaBuffa struct {
+	ByteBuffer
+}
+
 // ensure compatibility with interface
 func TestInterfaces(t *testing.T) {
 	t.Parallel()
@@ -63,6 +67,48 @@ func TestInterfaces(t *testing.T) {
 		if err := testMe2.Put(b); err != nil {
 			t.Fatal(err)
 		}
+	})
+
+	t.Run("BufferFactoryByteBufferCompat", func(t *testing.T) {
+		t.Parallel()
+		bf := BufferFactoryByteBufferCompat{NewBufferFactory()}
+		b := bf.Get()
+		if _, err := b.WriteString("test"); err != nil {
+			t.Fatal(err)
+		}
+		bf.Put(b)
+		b = bf.Get()
+		if b.Len() != 0 {
+			t.Fatal("buffer not reset")
+		}
+		foreign := &bytes.Buffer{}
+		foreign.WriteString("test")
+		bf.Put(foreign)
+		if foreign.Len() != 0 {
+			t.Fatal("buffer not reset")
+		}
+		foreignGot := bf.Get()
+		if foreignGot.Len() != 0 {
+			t.Fatal("buffer not reset")
+		}
+		bf.Put(foreignGot)
+		t.Run("must panic after wrapped and put twice", func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Error("panic expected")
+				}
+			}()
+			bf.Put(foreignGot)
+		})
+		t.Run("must panic on invalid type", func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Error("panic expected")
+				}
+			}()
+			bf.Put(&othaBuffa{})
+		})
+
 	})
 
 }
