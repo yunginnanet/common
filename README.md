@@ -1,5 +1,5 @@
 # common
-[![GoDoc](https://godoc.org/git.tcp.direct/kayos/common?status.svg)](https://pkg.go.dev/git.tcp.direct/kayos/common) [![codecov](https://codecov.io/gh/yunginnanet/common/branch/master/graph/badge.svg?token=vk5frSGqhq)](https://codecov.io/gh/yunginnanet/common)
+[![GoDoc](https://godoc.org/git.tcp.direct/kayos/common?status.svg)](https://pkg.go.dev/git.tcp.direct/kayos/common) [![codecov](https://codecov.io/gh/yunginnanet/common/branch/main/graph/badge.svg?token=vk5frSGqhq)](https://codecov.io/gh/yunginnanet/common)
 
 Welcome to things. Here are some of the aforementioned:
 
