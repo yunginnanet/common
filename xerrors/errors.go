@@ -52,6 +52,9 @@ func (e *Errors) Push(err error) {
 	if e.immutable {
 		panic("Add called on immutable error stack")
 	}
+	if err == nil {
+		return
+	}
 	e.mu.Lock()
 	if len(e.errs) > 0 {
 		newStack := []error{err}

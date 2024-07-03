@@ -31,8 +31,10 @@ func TestPopOneReturnsLastAddedError(t *testing.T) {
 	e := NewErrors()
 	firstErr := errors.New("first error")
 	secondErr := errors.New("second error")
+	e.Push(nil)
 	e.Push(firstErr)
 	e.Push(secondErr)
+	e.Push(nil)
 	poppedErr := e.Pop()
 	if !errors.Is(poppedErr, secondErr) {
 		t.Log(poppedErr.Error())
