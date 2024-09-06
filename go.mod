@@ -3,11 +3,11 @@ module git.tcp.direct/kayos/common
 go 1.21
 
 require (
-	golang.org/x/crypto v0.25.0
+	golang.org/x/crypto v0.27.0
 	nullprogram.com/x/rng v1.1.0
 )
 
-require golang.org/x/sys v0.22.0 // indirect
+require golang.org/x/sys v0.25.0 // indirect
 
 retract (
 	v0.9.8 // nil error push
