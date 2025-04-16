@@ -2,66 +2,11 @@ package common
 
 import (
 	"errors"
-	"fmt"
-	"io"
-	"os"
 	"sync"
 	"testing"
 
 	"git.tcp.direct/kayos/common/entropy"
-	"git.tcp.direct/kayos/common/hash"
-	"git.tcp.direct/kayos/common/squish"
 )
-
-var needle = []byte(entropy.RandStr(16))
-
-func TestBlakeEqualAndB64(t *testing.T) {
-	var clone = make([]byte, len(needle))
-	copy(clone, needle)
-
-	if !hash.BlakeEqual(needle, clone) {
-		t.Fatalf("BlakeEqual failed! Values %v and %v should have been equal.\n|---->Lengths: %d and %d",
-			needle, clone, len(needle), len(clone),
-		)
-	}
-
-	falseclone := []byte(entropy.RandStr(16))
-	if hash.BlakeEqual(needle, falseclone) {
-		t.Fatalf("BlakeEqual failed! Values %v and %v should NOT have been equal.\n|---->Lengths: %d and %d",
-			needle, clone, len(needle), len(clone),
-		)
-	}
-
-	var based = [2][]byte{needle, clone}
-
-	based[0] = []byte(squish.B64e(based[0]))
-	based[1] = []byte(squish.B64e(based[0]))
-
-	if hash.BlakeEqual(based[0], based[1]) {
-		t.Fatalf("Base64 encoding failed! Values %v and %v should NOT have been equal.\n|---->Lengths: %d and %d",
-			based[0], based[1], len(based[0]), len(based[1]),
-		)
-	}
-
-	// sneakin in some code coverage rq dwai nbd
-	bogusRd, bogusWrt := io.Pipe()
-	bogusRd2, bogusWrt2 := io.Pipe()
-	t.Logf("\n")
-	go func() {
-		Fprint(io.MultiWriter(bogusWrt, os.Stdout), fmt.Sprintf("[PASS] based[0] = %s", string(based[0])))
-		Fprintf(io.MultiWriter(bogusWrt2, os.Stdout), "\n[PASS] based[1] = %s", string(based[0]))
-	}()
-	_ = bogusWrt.CloseWithError(io.ErrClosedPipe)
-	_ = bogusWrt2.CloseWithError(io.ErrClosedPipe)
-	_, err := bogusRd.Read([]byte{})
-	if err == nil {
-		t.Fatalf("should have been an error...")
-	}
-	_, err = bogusRd2.Read([]byte{})
-	if err == nil {
-		t.Fatalf("should have been an error...")
-	}
-}
 
 func TestAbs(t *testing.T) {
 	var start = int32(entropy.RNG(5))

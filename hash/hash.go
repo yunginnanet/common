@@ -1,7 +1,6 @@
 package hash
 
 import (
-	"bytes"
 	"crypto/md5"  //nolint:gosec
 	"crypto/sha1" //nolint:gosec
 	"crypto/sha256"
@@ -9,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"hash"
+	"hash/crc32"
+	"hash/crc64"
 	"io"
 	"os"
 	"sync"
@@ -25,7 +26,40 @@ const (
 	TypeSHA256
 	TypeSHA512
 	TypeMD5
+	TypeCRC32
+	TypeCRC64ISO
+	TypeCRC64ECMA
 )
+
+var typeToString = map[Type]string{
+	TypeNull: "null", TypeBlake2b: "blake2b", TypeSHA1: "sha1",
+	TypeSHA256: "sha256", TypeSHA512: "sha512",
+	TypeMD5: "md5", TypeCRC32: "crc32",
+	TypeCRC64ISO: "crc64-iso", TypeCRC64ECMA: "crc64-ecma",
+}
+
+var stringToType = map[string]Type{
+	"null": TypeNull, "blake2b": TypeBlake2b, "sha1": TypeSHA1,
+	"sha256": TypeSHA256, "sha512": TypeSHA512,
+	"md5": TypeMD5, "crc32": TypeCRC32,
+	"crc64-iso": TypeCRC64ISO, "crc64-ecma": TypeCRC64ECMA,
+}
+
+func StringToType(s string) Type {
+	t, ok := stringToType[s]
+	if !ok {
+		return TypeNull
+	}
+	return t
+}
+
+func (t Type) String() string {
+	s, ok := typeToString[t]
+	if !ok {
+		return "unknown"
+	}
+	return s
+}
 
 var (
 	sha1Pool = &sync.Pool{
@@ -54,6 +88,24 @@ var (
 			return h
 		},
 	}
+	crc32Pool = &sync.Pool{
+		New: func() interface{} {
+			return crc32.NewIEEE()
+		},
+	}
+	crc64ISOPool = &sync.Pool{
+		New: func() interface{} {
+			// ISO and ECMA are pre-computed in the stdlib, so Make is just fetching them, not computing them.
+			h := crc64.New(crc64.MakeTable(crc64.ISO))
+			return h
+		},
+	}
+	crc64ECMAPool = &sync.Pool{
+		New: func() interface{} {
+			h := crc64.New(crc64.MakeTable(crc64.ECMA))
+			return h
+		},
+	}
 )
 
 func Sum(ht Type, b []byte) []byte {
@@ -74,6 +126,16 @@ func Sum(ht Type, b []byte) []byte {
 	case TypeMD5:
 		h = md5Pool.Get().(hash.Hash)
 		defer md5Pool.Put(h)
+	case TypeCRC32:
+		h = crc32Pool.Get().(hash.Hash)
+		defer crc32Pool.Put(h)
+	case TypeCRC64ISO:
+		h = crc64ISOPool.Get().(hash.Hash)
+		defer crc64ISOPool.Put(h)
+	case TypeCRC64ECMA:
+		h = crc64ECMAPool.Get().(hash.Hash)
+		defer crc64ECMAPool.Put(h)
+
 	default:
 		return nil
 	}
@@ -83,13 +145,8 @@ func Sum(ht Type, b []byte) []byte {
 	return sum
 }
 
-// Blake2bSum ignores all errors and gives you a blakae2b 64 hash value as a byte slice. (or panics somehow)
-func Blake2bSum(b []byte) []byte {
-	return Sum(TypeBlake2b, b)
-}
-
-// BlakeFileChecksum will attempt to calculate a blake2b checksum of the given file path's contents.
-func BlakeFileChecksum(path string) (buf []byte, err error) {
+// SumFile will attempt to calculate a blake2b checksum of the given file path's contents.
+func SumFile(ht Type, path string) (buf []byte, err error) {
 	var f *os.File
 	f, err = os.Open(path)
 	if err != nil {
@@ -107,10 +164,5 @@ func BlakeFileChecksum(path string) (buf []byte, err error) {
 		return nil, errors.New("file is empty")
 	}
 
-	return Sum(TypeBlake2b, buf), nil
-}
-
-// BlakeEqual will take in two byte slices, hash them with blake2b, and tell you if the resulting checksums match.
-func BlakeEqual(a []byte, b []byte) bool {
-	return bytes.Equal(Blake2bSum(a), Blake2bSum(b))
+	return Sum(ht, buf), nil
 }
