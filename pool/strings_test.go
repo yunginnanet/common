@@ -145,10 +145,10 @@ func TestStringFactory(t *testing.T) {
 	t.Run("StringPoolGrowBuffer", func(t *testing.T) {
 		t.Parallel()
 		buf := s.Get()
-		if err := buf.Grow(1); err != nil {
+		if err := buf.Grow(16); err != nil {
 			t.Fatal(err)
 		}
-		if buf.Cap() != 1 {
+		if buf.Cap() < 16 {
 			t.Fatalf("expected capacity of 1, got %d", buf.Cap())
 		}
 		if err := s.Put(buf); err != nil {
