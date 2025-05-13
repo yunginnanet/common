@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.tcp.direct/kayos/common/entropy"
+	"github.com/yunginnanet/common/entropy"
 )
 
 const (

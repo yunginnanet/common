@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"git.tcp.direct/kayos/common/entropy"
+	"github.com/yunginnanet/common/entropy"
 )
 
 func TestAbs(t *testing.T) {
