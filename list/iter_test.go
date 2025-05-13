@@ -92,12 +92,12 @@ Wed Jul 17 04:20:42 PM PDT 2024
 
 goos: linux
 goarch: amd64
-pkg: git.tcp.direct/kayos/common/list
+pkg: github.com/yunginnanet/common/list
 cpu: 13th Gen Intel(R) Core(TM) i9-13900K
 BenchmarkLockingList_Contains-32        	   6034	   196409 ns/op	 120801 B/op	   7550 allocs/op
 BenchmarkLockingList_ContainsDeep-32    	   4717	   245886 ns/op	 120800 B/op	   7550 allocs/op
 PASS
-ok  	git.tcp.direct/kayos/common/list	16.810s
+ok  	github.com/yunginnanet/common/list	16.810s
 
 */
 

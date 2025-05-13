@@ -21,7 +21,7 @@ func BenchmarkBufferFactory(b *testing.B) {
 	benchmarkBufferFactory(b)
 }
 
-// BenchmarkNotUsingPackage is a benchmark that does not use git.tcp.direct/kayos/common/pool.
+// BenchmarkNotUsingPackage is a benchmark that does not use github.com/yunginnanet/common/pool.
 // It mimics the behavior of the BufferFactory benchmark, but does not use a buffer pool.
 //
 // See bytes_test.go for more information.
