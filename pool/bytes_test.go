@@ -8,6 +8,7 @@ import (
 )
 
 func TestNewBufferFactory(t *testing.T) {
+	t.Parallel()
 	bf := NewBufferFactory()
 	if bf.pool == nil {
 		t.Fatalf("The pool is nil")
@@ -15,6 +16,7 @@ func TestNewBufferFactory(t *testing.T) {
 }
 
 func TestBufferFactory(t *testing.T) {
+	t.Parallel()
 	bf := NewBufferFactory()
 	t.Run("BufferPut", func(t *testing.T) {
 		t.Parallel()
@@ -572,13 +574,292 @@ func TestBufferFactory(t *testing.T) {
 
 		defer func() {
 			if r := recover(); r == nil {
-				t.Fatal("The panic is not nil")
+				t.Fatal("The panic is nil")
 			}
 		}()
 
 		buf = nil
 		if buf.Close() == nil {
 			t.Fatal("The error is nil after closing a nil buffer")
+		}
+	})
+	t.Run("BufferLockingSafety", func(t *testing.T) {
+		// implement the Buffer.Safe* methods and test them
+		t.Parallel()
+		buf := bf.Get().WithMutex(&bf)
+		if _, err := buf.SafeWrite([]byte("hello")); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := buf.SafeWrite([]byte("world")); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := buf.SafeWrite([]byte("!")); err != nil {
+			t.Fatal(err)
+		}
+		if buf.SafeString() != "helloworld!" {
+			t.Fatalf("The string is not 'helloworld!': %v", buf.String())
+		}
+		if b := buf.SafeNext(1); b == nil {
+			t.Fatal("The byte is nil despite having written to the buffer")
+		}
+		if _, err := buf.SafeRead(make([]byte, 1)); err != nil {
+			t.Fatal(err)
+		}
+		if err := buf.SafeUnreadByte(); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := buf.SafeWrite([]byte("yeet")); err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			if _, err := buf.SafeReadByte(); err != nil {
+				t.Errorf("Error reading from buffer: %v", err)
+			}
+		}()
+		for i := 0; i < 100; i++ {
+			go func() {
+				if _, err := buf.SafeWrite([]byte("yeet")); err != nil {
+					t.Errorf("Error writing to buffer: %v", err)
+				}
+			}()
+		}
+		for i := 0; i < 100; i++ {
+			go func() {
+				// must be ran with race detector enabled or this check does nothing
+				_ = buf.SafeLen()
+			}()
+		}
+		for i := 0; i < 100; i++ {
+			if _, err := buf.SafeRead([]byte("yeet")); err != nil {
+				t.Errorf("Error reading from buffer: %v", err)
+			}
+		}
+		for i := 0; i < 100; i++ {
+			go func() {
+				_ = buf.SafeBytes()
+			}()
+		}
+		for i := 0; i < 100; i++ {
+			go func() {
+				_ = buf.SafeString()
+			}()
+		}
+
+		for i := 0; i < 100; i++ {
+			go func() {
+				if _, err := buf.SafeWriteTo(io.Discard); err != nil {
+					t.Errorf("Error writing to buffer: %v", err)
+				}
+			}()
+		}
+		for i := 0; i < 100; i++ {
+			go func() {
+				br := bytes.NewReader([]byte("yeet"))
+				if _, err := buf.SafeReadFrom(br); err != nil {
+					t.Errorf("Error reading from buffer: %v", err)
+				}
+			}()
+		}
+		for i := 0; i < 100; i++ {
+			if _, err := buf.SafeReadFrom(strings.NewReader("yeet")); err != nil {
+				t.Errorf("Error reading from buffer: %v", err)
+			}
+		}
+		if err := buf.SafeReset(); err != nil {
+			t.Errorf("Error reading from buffer: %v", err)
+		}
+		if _, err := buf.SafeWrite([]byte("hello")); err != nil {
+			t.Fatal(err)
+		}
+		if err := buf.SafeClose(); err != nil {
+			t.Fatal(err)
+		}
+		if err := buf.SafeClose(); err == nil {
+			t.Fatal("The error is nil despite closing the buffer twice")
+		}
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The error is nil despite closing the buffer twice")
+				}
+			}()
+			_ = buf.SafeBytes()
+		}()
+		buf2 := bf.Get().WithMutex(&bf)
+		_, err := buf2.SafeWrite([]byte("hello"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, err := buf2.SafeReadByte()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if b != 'h' {
+			t.Fatalf("The byte is not 'h': %v", b)
+		}
+		bts := buf2.SafeNext(buf2.Len())
+		if bts == nil {
+			t.Fatal("The bytes are nil despite having written to the buffer")
+		}
+		if !bytes.Equal(bts, []byte("ello")) {
+			t.Fatalf("The bytes are not 'ello': %v", bts)
+		}
+		buf2.SafeTruncate(0)
+		if err = bf.SafePut(buf2); err != nil {
+			t.Fatal(err)
+		}
+		if err = bf.SafePut(buf2); err == nil {
+			t.Fatal("The error is nil despite putting the buffer twice")
+		}
+	})
+	t.Run("BufferLockingSafetyMustFail", func(t *testing.T) {
+		// implement the Buffer.Safe* methods and test them
+		t.Parallel()
+		buf := bf.Get()
+		if _, err := buf.SafeWrite([]byte("hello")); err == nil {
+			t.Fatal("the error is nil despite nil mutex")
+		}
+		if _, err := buf.SafeWrite([]byte("world")); err == nil {
+			t.Fatal(err)
+		}
+		if _, err := buf.SafeWrite([]byte("!")); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The panic is nil")
+				}
+			}()
+			if buf.SafeString() != "helloworld!" {
+				t.Fatalf("The string is not 'helloworld!': %v", buf.String())
+			}
+		}()
+		if _, err := buf.SafeRead(make([]byte, 1)); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		if err := buf.SafeUnreadByte(); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		if _, err := buf.SafeWrite([]byte("yeet")); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		if _, err := buf.SafeReadByte(); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The panic is nil")
+				}
+			}()
+			_ = buf.SafeLen()
+		}()
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The panic is nil")
+				}
+			}()
+			_ = buf.SafeNext(1)
+		}()
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The panic is nil")
+				}
+			}()
+			_ = buf.SafeBytes()
+		}()
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The panic is nil")
+				}
+			}()
+			_ = buf.SafeString()
+		}()
+		if _, err := buf.SafeWriteTo(io.Discard); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		br := bytes.NewReader([]byte("yeet"))
+		if _, err := buf.SafeReadFrom(br); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		if _, err := buf.SafeReadFrom(strings.NewReader("yeet")); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		if err := buf.SafeReset(); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The panic is nil")
+				}
+			}()
+			buf.SafeTruncate(1)
+		}()
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The panic is nil")
+				}
+			}()
+			_ = buf.SafeNext(1)
+		}()
+		if err := buf.SafeClose(); err == nil {
+			t.Fatal("The error is nil despite nil mutex")
+		}
+		buf2 := bf.Get().WithMutex(&bf)
+		buf2.Buffer = nil
+		if err := buf2.SafeReset(); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
+		}
+		if n := buf2.SafeLen(); n != 0 {
+			t.Fatalf("The length is not 0: %v", n)
+		}
+		if _, err := buf2.SafeWriteTo(io.Discard); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
+		}
+		if _, err := buf2.SafeReadFrom(br); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
+		}
+		if _, err := buf2.SafeWrite([]byte("yeet")); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
+		}
+		if _, err := buf2.SafeRead(make([]byte, 1)); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
+		}
+		if err := buf2.SafeUnreadByte(); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
+		}
+		if _, err := buf2.SafeReadByte(); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
+		}
+		if err := buf2.SafeClose(); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
+		}
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Fatal("The panic is nil")
+				}
+			}()
+			buf2.SafeTruncate(1)
+		}()
+		if bts := buf2.SafeNext(1); bts != nil {
+			t.Fatalf("The bytes are not nil: %v", bts)
+		}
+		buf2 = buf2.WithMutex(&bf)
+		if bts := buf2.SafeBytes(); bts != nil {
+			t.Fatalf("The bytes are not nil: %v", bts)
+		}
+		if str := buf2.SafeString(); str != "" {
+			t.Fatalf("The string is not empty: %v", str)
+		}
+		if err := buf2.SafeClose(); err == nil {
+			t.Fatal("The error is nil despite nil buffer")
 		}
 	})
 }
