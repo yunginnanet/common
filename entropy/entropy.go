@@ -9,7 +9,7 @@ import (
 
 	"nullprogram.com/x/rng"
 
-	"git.tcp.direct/kayos/common/pool"
+	"github.com/yunginnanet/common/pool"
 )
 
 type randPool struct {
